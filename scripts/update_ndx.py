@@ -1,0 +1,224 @@
+"""Fetch Nasdaq-100 heatmap data from finviz and write data/ndx.json.
+
+Runs in GitHub Actions. Writes the file only when the data actually changed,
+so runs outside US market hours do not create commits.
+"""
+import json
+import re
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+import requests
+from bs4 import BeautifulSoup
+
+OUT = Path(__file__).resolve().parent.parent / "data" / "ndx.json"
+RANKS = OUT.parent / "rank_history.json"
+PERIODS = ["d1", "w1", "w4", "w13", "w26", "ytd", "w52"]
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Referer": "https://finviz.com/map?t=sec_ndx",
+}
+
+session = requests.Session()
+session.headers.update(HEADERS)
+
+
+def get(url):
+    last = None
+    for attempt in range(3):
+        try:
+            r = session.get(url, timeout=30)
+            if r.status_code == 200:
+                return r
+            last = f"HTTP {r.status_code}"
+        except requests.RequestException as e:
+            last = str(e)
+        time.sleep(4 * (attempt + 1))
+    raise RuntimeError(f"failed to fetch {url}: {last}")
+
+
+def fetch_perf():
+    perf = {}
+    for p in PERIODS:
+        j = get(f"https://finviz.com/api/map_perf?t=sec_ndx&st={p}").json()
+        nodes = {k: round(float(v), 2) for k, v in j.get("nodes", {}).items()
+                 if isinstance(v, (int, float))}
+        if len(nodes) < 90:
+            raise RuntimeError(f"perf {p}: only {len(nodes)} tickers")
+        perf[p] = nodes
+        time.sleep(0.5)
+    return perf
+
+
+def parse_cap(text):
+    m = re.match(r"^([\d.]+)([TBMK])$", text.strip())
+    if not m:
+        return None
+    v = float(m.group(1))
+    mult = {"T": 1_000_000, "B": 1_000, "M": 1, "K": 0.001}[m.group(2)]
+    return round(v * mult)  # millions of USD
+
+
+def fetch_stocks():
+    rows, total, start = [], None, 1
+    while start < 400:
+        html = get(f"https://finviz.com/screener.ashx?v=111&f=idx_ndx&r={start}").text
+        soup = BeautifulSoup(html, "html.parser")
+        if total is None:
+            m = re.search(r"#\d+\s*/\s*(\d+)\s*Total", soup.get_text(" "))
+            total = int(m.group(1)) if m else None
+        table = soup.select_one("table.screener_table")
+        if table is None:
+            raise RuntimeError("screener table not found")
+        head = [c.get_text(strip=True) for c in table.select("tr")[0].find_all(["th", "td"])]
+        idx = {name: head.index(name) for name in ["Ticker", "Company", "Sector", "Industry", "Market Cap"]}
+        page = []
+        for tr in table.select("tr")[1:]:
+            tds = tr.find_all("td")
+            if len(tds) < len(head):
+                continue
+            cell = tds[idx["Ticker"]]
+            a = cell.select_one("a.tab-link")
+            if a is not None:
+                ticker = a.get_text(strip=True)
+            else:  # fall back to the t= parameter of the quote link
+                link = cell.find("a", href=re.compile(r"[?&]t="))
+                m = re.search(r"[?&]t=([A-Z.\-]+)", link["href"]) if link else None
+                ticker = m.group(1) if m else cell.get_text(strip=True)
+            page.append({
+                "t": ticker,
+                "name": tds[idx["Company"]].get_text(strip=True),
+                "sec": tds[idx["Sector"]].get_text(strip=True),
+                "ind": tds[idx["Industry"]].get_text(strip=True),
+                "cap": parse_cap(tds[idx["Market Cap"]].get_text(strip=True)),
+            })
+        if not page:
+            break
+        rows.extend(page)
+        if total and len(rows) >= total:
+            break
+        start += 20
+        time.sleep(1)
+    # One company listed twice (GOOG/GOOGL) would be counted twice: keep one line per company.
+    by_company = {}
+    for s in rows:
+        if not s["cap"]:
+            continue
+        cur = by_company.get(s["name"])
+        if cur is None or len(s["t"]) > len(cur["t"]):
+            by_company[s["name"]] = s
+    stocks = sorted(by_company.values(), key=lambda s: -s["cap"])
+    if len(stocks) < 90:
+        raise RuntimeError(f"screener: only {len(stocks)} stocks")
+    return stocks
+
+
+QQQ_HOLDINGS = ("https://dng-api.invesco.com/cache/v1/accounts/en_US/shareclasses/QQQ/holdings/fund"
+                "?idType=ticker&interval=monthly&productType=ETF")
+
+
+def fetch_weights():
+    """Index weights from the holdings of Invesco QQQ, which fully replicates the Nasdaq-100.
+
+    GOOG and GOOGL are merged into one Alphabet line (GOOGL). Weights are rescaled to sum to 100
+    over the stock holdings (futures and cash are left out).
+    """
+    r = session.get(QQQ_HOLDINGS, timeout=30, headers={
+        "Origin": "https://www.invesco.com",
+        "Referer": "https://www.invesco.com/qqq-etf/en/about.html",
+        "Accept": "application/json",
+    })
+    r.raise_for_status()
+    j = r.json()
+    w, total = {}, 0.0
+    for h in j.get("holdings", []):
+        pct, ticker = h.get("percentageOfTotalNetAssets"), h.get("ticker")
+        kind = h.get("securityTypeName") or ""
+        if not ticker or not isinstance(pct, (int, float)):
+            continue
+        if "Common Stock" not in kind and "Depository Receipt" not in kind:
+            continue
+        t = "GOOGL" if ticker == "GOOG" else ticker
+        w[t] = w.get(t, 0.0) + pct
+        total += pct
+    if len(w) < 90 or total <= 0:
+        raise RuntimeError(f"QQQ holdings: only {len(w)} stocks")
+    return {"asOf": j.get("effectiveDate"), "source": "Invesco QQQ",
+            "w": {k: round(v / total * 100, 4) for k, v in w.items()}}
+
+
+def next_month(key):
+    y, m = map(int, key.split("-"))
+    return f"{y + (m == 12)}-{1 if m == 12 else m + 1:02d}"
+
+
+def update_rank_history(stocks):
+    """Keep the market-cap rank of every current constituent for the current month (New York time).
+
+    Each run overwrites the current month, so the last run of a month leaves the month-end rank.
+    """
+    if not RANKS.exists():
+        return
+    hist = json.loads(RANKS.read_text(encoding="utf-8"))
+    months, ranks = hist["months"], hist["ranks"]
+    cur = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m")
+    if cur < months[-1]:
+        return
+    while months[-1] < cur:
+        months.append(next_month(months[-1]))
+        for t in ranks:
+            ranks[t].append(None)
+    live = {s["t"]: i + 1 for i, s in enumerate(sorted(stocks, key=lambda s: -s["cap"]))}
+    for t in ranks:  # stocks that left the index get no rank for this month
+        ranks[t][-1] = None
+    for t, r in live.items():
+        if t not in ranks:
+            ranks[t] = [None] * len(months)
+        ranks[t][-1] = r
+    text = json.dumps(hist, ensure_ascii=False, separators=(",", ":"))
+    if text != RANKS.read_text(encoding="utf-8"):
+        RANKS.write_text(text, encoding="utf-8")
+        print(f"rank history: {cur} updated")
+
+
+def main():
+    old = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
+    perf = fetch_perf()
+    try:
+        weights = fetch_weights()
+    except Exception as e:  # keep the last known weights if Invesco is unavailable
+        print(f"warning: {e}; keeping previous weights", file=sys.stderr)
+        weights = old.get("weights")
+    try:
+        stocks = fetch_stocks()
+    except Exception as e:  # keep the last known list if the screener fails
+        print(f"warning: {e}; keeping previous stock list", file=sys.stderr)
+        stocks = old.get("stocks")
+        if not stocks:
+            raise
+    try:
+        update_rank_history(stocks)
+    except Exception as e:  # the heatmap data still updates if this fails
+        print(f"warning: rank history: {e}", file=sys.stderr)
+    if old.get("perf") == perf and old.get("stocks") == stocks and old.get("weights") == weights:
+        print("no change")
+        return
+    data = {
+        "updatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "source": "finviz",
+        "stocks": stocks,
+        "perf": perf,
+    }
+    if weights:
+        data["weights"] = weights
+    OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    print(f"updated: {len(stocks)} stocks, NVDA d1 {perf['d1'].get('NVDA')}")
+
+
+if __name__ == "__main__":
+    main()
