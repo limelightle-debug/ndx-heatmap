@@ -197,6 +197,13 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
   #detail{left:auto;right:max(20px,env(safe-area-inset-right,0px));bottom:max(20px,env(safe-area-inset-bottom,0px));width:360px;border:1px solid var(--line);border-radius:12px;padding:16px}
   .pgrid{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
+.price{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin:4px 0 14px}
+.price .p{font-family:var(--f-tick);font-stretch:82%;font-weight:700;font-size:44px;line-height:1;font-variant-numeric:tabular-nums}
+.price .chg{font-family:var(--f-tick);font-stretch:82%;font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
+.pside{display:flex;flex-direction:column;gap:2px}
+.dhl{display:flex;gap:12px;font-size:12px;color:var(--muted)}
+.dhl b{font-family:var(--f-tick);font-stretch:82%;font-size:15px;color:var(--ink);font-weight:700;margin-left:3px}
+.price .meta{font-size:12px;color:var(--muted);width:100%}
 @media (max-width:760px){
   .summary{grid-template-columns:repeat(2,minmax(0,1fr))}
   .cols{grid-template-columns:minmax(0,1fr)}
@@ -236,6 +243,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
   </div>
 
   <div id="app" hidden>
+    <div class="price" id="price" hidden></div>
     <div class="summary" id="summary"></div>
     <section class="mapbox">
       <div class="maphead">
@@ -388,6 +396,19 @@ function renderControls(){
   document.querySelectorAll("#views button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===state.view));
   document.querySelectorAll("#wscope button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.w===state.wscope));
   document.querySelectorAll("#rrange button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.rr===state.rrange));
+}
+// the Nasdaq-100 index level, like the price at the top of the TQQQ app
+function renderPrice(){
+  const q=DATA&&DATA.index, el=$("price");
+  if(!q||q.price==null){el.hidden=true;return}
+  const n=v=>v.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const d=q.prev?q.price-q.prev:null, r=q.prev?q.price/q.prev-1:null;
+  const live=/\d:\d/.test(q.time||""), hl=q.high!=null&&q.low!=null;
+  const m=String(q.time||"").match(/([A-Z][a-z]{2}) (\d{1,2}), (\d{4})/);
+  const day=m?`${"JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(m[1])/3+1}/${+m[2]}`:"";
+  el.hidden=false;
+  el.innerHTML=`<div class="p">${n(q.price)}</div><div class="pside">${d==null?"":`<div class="chg ${cls(r*100)}">${d>=0?"+":"−"}${n(Math.abs(d))}（${fmt(r*100,2)}）</div>`}${hl?`<div class="dhl"><span>高値 <b>${n(q.high)}</b></span><span>安値 <b>${n(q.low)}</b></span></div>`:""}</div>
+   <div class="meta">ナスダック100指数 · ${live?"最新値":day?`${day}の終値`:"終値"}${q.prev?` · 前日終値 ${n(q.prev)}`:""}</div>`;
 }
 function renderSummary(){
   const all=STOCKS.filter(s=>val(s.t)!=null);
@@ -593,7 +614,7 @@ function renderAll(){
   readColors();renderControls();
   if(!DATA)return;
   $("app").hidden=false;$("empty").hidden=true;
-  renderStatus();renderSummary();renderContrib();renderSectors();renderLegend();renderMapOrList();renderDetail();
+  renderStatus();renderPrice();renderSummary();renderContrib();renderSectors();renderLegend();renderMapOrList();renderDetail();
 }
 
 /* data loading */

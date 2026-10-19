@@ -42,6 +42,69 @@ def get(url):
     raise RuntimeError(f"failed to fetch {url}: {last}")
 
 
+NASDAQ_HEADERS = {
+    "User-Agent": HEADERS["User-Agent"],
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Origin": "https://www.nasdaq.com",
+    "Referer": "https://www.nasdaq.com/",
+}
+
+
+def num(x):
+    return float(str(x).replace("$", "").replace(",", "").strip())
+
+
+def regular_session(stamp):
+    """True for an official close ("Oct 16, 2026") or a value stamped 9:30-16:00 ET."""
+    m = re.search(r"(\d{1,2}):(\d{2})(?::\d{2})?\s*([AP]M)", stamp or "", re.I)
+    if not m:
+        return bool(stamp)
+    t = (int(m.group(1)) % 12 + (12 if m.group(3).upper() == "PM" else 0)) * 60 + int(m.group(2))
+    return 9 * 60 + 30 <= t <= 16 * 60
+
+
+def nasdaq_json(path):
+    r = requests.get(f"https://api.nasdaq.com/api/quote/NDX/{path}?assetclass=index",
+                     headers=NASDAQ_HEADERS, timeout=30)
+    r.raise_for_status()
+    return r.json().get("data") or {}
+
+
+def fetch_index():
+    """The Nasdaq-100 index level from Nasdaq.com: price, previous close and the day's high and low."""
+    info = nasdaq_json("info")
+    p = None
+    for key in ("primaryData", "secondaryData"):
+        c = info.get(key) or {}
+        if c.get("lastSalePrice") and regular_session(c.get("lastTradeTimestamp")):
+            p = c
+            break
+    if p is None:
+        return None
+    price = num(p["lastSalePrice"])
+    q = {"price": round(price, 2), "prev": round(price - num(p.get("netChange") or 0), 2),
+         "time": p.get("lastTradeTimestamp")}
+    try:
+        summ = nasdaq_json("summary").get("summaryData") or {}
+        print("index summary fields:", sorted(summ))
+        vals = {k.lower(): str((v or {}).get("value", "")) for k, v in summ.items() if isinstance(v, dict)}
+        for k, v in vals.items():
+            if "high" in k and "low" in k and "/" in v and "52" not in k:
+                hi, lo = (num(x) for x in v.split("/"))
+                q.update(high=round(hi, 2), low=round(lo, 2))
+        hi = next((v for k, v in vals.items() if k in ("todayshigh", "todayhigh", "dayhigh")), None)
+        lo = next((v for k, v in vals.items() if k in ("todayslow", "todaylow", "daylow")), None)
+        if hi and lo and "high" not in q:
+            q.update(high=round(num(hi), 2), low=round(num(lo), 2))
+        pc = vals.get("previousclose")
+        if pc:
+            q["prev"] = round(num(pc), 2)
+    except (requests.RequestException, ValueError) as e:
+        print(f"warning: index summary: {e}", file=sys.stderr)
+    return q
+
+
 def fetch_perf():
     perf = {}
     for p in PERIODS:
@@ -202,10 +265,16 @@ def main():
         if not stocks:
             raise
     try:
+        index = fetch_index() or old.get("index")
+    except Exception as e:  # the heatmap still updates without the index level
+        print(f"warning: index: {e}", file=sys.stderr)
+        index = old.get("index")
+    try:
         update_rank_history(stocks)
     except Exception as e:  # the heatmap data still updates if this fails
         print(f"warning: rank history: {e}", file=sys.stderr)
-    if old.get("perf") == perf and old.get("stocks") == stocks and old.get("weights") == weights:
+    if (old.get("perf") == perf and old.get("stocks") == stocks and old.get("weights") == weights
+            and old.get("index") == index):
         print("no change")
         return
     data = {
@@ -216,6 +285,8 @@ def main():
     }
     if weights:
         data["weights"] = weights
+    if index:
+        data["index"] = index
     OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
     print(f"updated: {len(stocks)} stocks, NVDA d1 {perf['d1'].get('NVDA')}")
 
