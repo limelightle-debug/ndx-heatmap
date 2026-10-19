@@ -135,6 +135,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .wsep{font-size:11px;color:var(--muted);padding:8px 10px 4px;letter-spacing:.04em}
 .wnote{font-size:11.5px;color:var(--muted);margin:10px 0 0}
 /* rank history view */
+#ranks{margin-top:26px;padding-top:16px;border-top:1px solid var(--line)}
 .rtop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
 .rtitle{font-size:13px;font-weight:700;color:var(--ink2);letter-spacing:.04em}
 .rkey{display:flex;gap:12px;font-size:11.5px;color:var(--muted);flex-wrap:wrap;margin-bottom:4px}
@@ -229,7 +230,6 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
         <button type="button" data-v="map">マップ</button>
         <button type="button" data-v="list">ランキング</button>
         <button type="button" data-v="weight">ウェイト</button>
-        <button type="button" data-v="rank">順位推移</button>
       </div>
     </div>
   </div>
@@ -300,7 +300,8 @@ const secJa=s=>SEC_JA[s]||s;
 let DATA=null, STOCKS=[], BY={}, CAPTOTAL=0, SECTORS=[], SWC={};
 const store={get(k,d){try{const v=localStorage.getItem("ndxhm."+k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem("ndxhm."+k,v)}catch(e){}}};
 const state={period:store.get("period","d1"),view:store.get("view","map"),wscope:store.get("wscope","20"),rrange:store.get("rrange","10"),rsel:null,rmonth:null,zoom:null,sel:null};
-if(!["map","list","weight","rank"].includes(state.view))state.view="map";
+if(state.view==="rank")state.view="weight";  // the rank chart now lives in the weight view
+if(!["map","list","weight"].includes(state.view))state.view="map";
 if(!["10","5","3"].includes(state.rrange))state.rrange="10";
 let RH=null;
 if(!PLABEL[state.period])state.period="d1";
@@ -563,12 +564,11 @@ function renderDetail(){
 }
 function renderMapOrList(){
   const v=state.view;
-  $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="rank";
+  $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="weight"||!!state.zoom;
   $("back").hidden=!state.zoom;
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
-  $("hint").textContent=state.zoom?`${secJa(state.zoom)}を表示中`:({map:"面積＝指数ウェイト、色＝騰落率。タップで詳細",list:`${PLABEL[state.period]}の騰落率順。タップで詳細`,weight:`指数ウェイト：${weightNote()}。タップで詳細`,rank:"チャートをタップ、または横になぞると、その月の順位が出ます。銘柄をタップで強調"})[v];
-  if(state.zoom&&v==="rank")$("hint").textContent="順位推移はセクターで絞り込みません";
-  if(v==="map")renderMap();else if(v==="list")renderList();else if(v==="weight")renderWeights();else renderRanks();
+  $("hint").textContent=state.zoom?`${secJa(state.zoom)}を表示中`:({map:"面積＝指数ウェイト、色＝騰落率。タップで詳細",list:`${PLABEL[state.period]}の騰落率順。タップで詳細`,weight:`指数ウェイト：${weightNote()}。タップで詳細`})[v];
+  if(v==="map")renderMap();else if(v==="list")renderList();else if(v==="weight"){renderWeights();if(!state.zoom)renderRanks()}
 }
 function renderAll(){
   readColors();renderControls();
@@ -628,7 +628,7 @@ $("map").addEventListener("pointermove",e=>{
 });
 $("map").addEventListener("pointerleave",()=>{tip.hidden=true});
 
-let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(DATA&&state.view==="map")renderMap();if(DATA&&state.view==="rank")renderRanks()},80)}).observe($("map").parentElement);
+let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(DATA&&state.view==="map")renderMap();if(DATA&&state.view==="weight"&&!state.zoom)renderRanks()},80)}).observe($("map").parentElement);
 // rank chart: a tap (or click) picks the month, sliding a finger sideways moves it,
 // a vertical swipe scrolls the page and keeps it; a tap outside the chart clears it
 {const rc=$("rchart");let t=null;
@@ -648,7 +648,7 @@ let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(DATA&&stat
  document.addEventListener("pointercancel",()=>{out=null},true);
  document.addEventListener("pointerup",e=>{const o=out;out=null;
    if(!o||e.pointerId!==o.id||Math.hypot(e.clientX-o.x,e.clientY-o.y)>=10||state.rmonth==null)return;
-   state.rmonth=null;if(DATA&&state.view==="rank")renderRanks()},true);}
+   state.rmonth=null;if(DATA&&state.view==="weight")renderRanks()},true);}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")load(false)});
 setInterval(()=>{if(document.visibilityState==="visible")load(false)},5*60*1000);
 setInterval(()=>{if(DATA)renderStatus()},60*1000);
