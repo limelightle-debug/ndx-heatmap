@@ -1,7 +1,7 @@
 // Offline shell + latest data. Bump CACHE when the app files change.
-const CACHE = "ndx-heatmap-v11";
+const CACHE = "ndx-heatmap-v12";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./d3.min.js",
-  "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png", "./icons/icon-maskable-512.png", "./icons/avatar.jpg"];
+  "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png", "./icons/icon-maskable-512.png", "./icons/avatar.jpg", "./icons/app.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
