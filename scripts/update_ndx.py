@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 
 OUT = Path(__file__).resolve().parent.parent / "data" / "ndx.json"
 RANKS = OUT.parent / "rank_history.json"
+INDEX_DAILY = OUT.parent / "ndx_daily.json"
 PERIODS = ["d1", "w1", "w4", "w13", "w26", "ytd", "w52"]
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
@@ -64,8 +65,8 @@ def regular_session(stamp):
     return 9 * 60 + 30 <= t <= 16 * 60
 
 
-def nasdaq_json(path):
-    r = requests.get(f"https://api.nasdaq.com/api/quote/NDX/{path}?assetclass=index",
+def nasdaq_json(path, query=""):
+    r = requests.get(f"https://api.nasdaq.com/api/quote/NDX/{path}?assetclass=index{query}",
                      headers=NASDAQ_HEADERS, timeout=30)
     r.raise_for_status()
     return r.json().get("data") or {}
@@ -103,6 +104,52 @@ def fetch_index():
     except (requests.RequestException, ValueError) as e:
         print(f"warning: index summary: {e}", file=sys.stderr)
     return q
+
+
+def quote_day(stamp):
+    """yyyymmdd of a Nasdaq timestamp such as "Oct 19, 2026 9:36 AM ET", or None."""
+    m = re.search(r"([A-Z][a-z]{2}) (\d{1,2}), (\d{4})", stamp or "")
+    mon = "JanFebMarAprMayJunJulAugSepOctNovDec".find(m.group(1)) if m else -1
+    return None if mon < 0 else int(m.group(3)) * 10000 + (mon // 3 + 1) * 100 + int(m.group(2))
+
+
+def update_index_daily(index):
+    """Daily open/high/low/close of the index in data/ndx_daily.json, for the candle chart.
+
+    The official history comes from Nasdaq.com (about ten years, kept and extended run by run;
+    fetched at most every 30 minutes). Today's bar is built from the live quote until the
+    official row appears; its open is the first value seen today, so it is approximate."""
+    store = json.loads(INDEX_DAILY.read_text(encoding="utf-8")) if INDEX_DAILY.exists() else {}
+    rows = {r[0]: r[1:5] for r in store.get("daily", [])}
+    now = datetime.now(timezone.utc)
+    fetched = store.get("fetchedAt")
+    if not rows or not fetched or (now - datetime.fromisoformat(fetched)).total_seconds() > 1800:
+        today = datetime.now(ZoneInfo("America/New_York")).date()
+        j = nasdaq_json("historical", f"&fromdate={today.replace(year=today.year - 10)}&todate={today}&limit=10000")
+        got = 0
+        for r in ((j.get("tradesTable") or {}).get("rows") or []):
+            try:
+                mo, d, y = r["date"].split("/")
+                c = num(r["close"])
+                o, h, l = (num(r[k]) if str(r.get(k, "")).strip() not in ("", "N/A") else c for k in ("open", "high", "low"))
+                rows[int(f"{y}{mo}{d}")] = [round(o, 2), round(h, 2), round(l, 2), round(c, 2)]
+                got += 1
+            except (KeyError, ValueError):
+                continue
+        print(f"index history: {got} days from Nasdaq.com")
+        if not got and not rows:
+            raise RuntimeError(f"no index history rows; keys: {sorted(j)[:8]}")
+        fetched = now.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    out = {"fetchedAt": fetched, "daily": [[d, *v] for d, v in sorted(rows.items())]}
+    qd = quote_day((index or {}).get("time"))
+    if qd and rows and qd > max(rows):
+        before = store.get("today")
+        o = before[1] if before and before[0] == qd else index["price"]
+        hs = [x for x in (index.get("high"), index["price"]) if x]
+        ls = [x for x in (index.get("low"), index["price"]) if x]
+        out["today"] = [qd, o, max(hs), min(ls), index["price"]]
+    if out != store:
+        INDEX_DAILY.write_text(json.dumps(out, separators=(",", ":")) + "\n", encoding="utf-8")
 
 
 def fetch_perf():
@@ -269,6 +316,13 @@ def main():
     except Exception as e:  # the heatmap still updates without the index level
         print(f"warning: index: {e}", file=sys.stderr)
         index = old.get("index")
+    try:
+        update_index_daily(index)
+    except Exception as e:  # the heatmap still updates without the index chart
+        print(f"warning: index history: {e}", file=sys.stderr)
+        if not INDEX_DAILY.exists() or "error" in json.loads(INDEX_DAILY.read_text(encoding="utf-8")):
+            # leave the reason where it can be read without signing in
+            INDEX_DAILY.write_text(json.dumps({"error": f"{type(e).__name__}: {e}"[:400], "daily": []}) + "\n", encoding="utf-8")
     try:
         update_rank_history(stocks)
     except Exception as e:  # the heatmap data still updates if this fails
