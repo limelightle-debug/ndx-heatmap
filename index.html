@@ -67,6 +67,17 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
 .panel h2{margin:0 0 10px;font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--ink2);display:flex;justify-content:space-between;gap:8px}
+.ibox{margin-top:14px}
+.ctlrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.seg.sm button{padding:7px 9px;font-size:12.5px}
+.readout{font-size:12px;color:var(--ink2);height:40px;overflow:hidden;margin:8px 2px 2px;font-variant-numeric:tabular-nums}
+.readout .rrow{display:flex;gap:14px;white-space:nowrap;line-height:20px}
+.readout b{font-family:var(--f-tick);font-stretch:82%;color:var(--ink);font-size:13px}
+.ichart{position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.ichart svg{display:block;width:100%;height:auto;overflow:visible}
+.ichart .ax{font-family:var(--f-tick);font-stretch:82%;font-size:11px;fill:var(--muted)}
+.ichart .grid{stroke:var(--line);stroke-width:1}
+.ichart .xh{stroke:var(--ink2);stroke-width:1;stroke-dasharray:3 3}
 .panel h2 span{font-weight:400;color:var(--muted);letter-spacing:0}
 .contrib{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
 .contrib h3{margin:0 0 6px;font-size:12px;font-weight:500;color:var(--muted)}
@@ -277,6 +288,23 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
         <div class="rinfo" id="rinfo"></div>
       </div>
     </section>
+    <section class="panel ibox" id="ibox" hidden>
+      <h2>ナスダック100指数 <span>ローソク足</span></h2>
+      <div class="ctlrow">
+        <div class="seg" id="itf" role="group" aria-label="足">
+          <button type="button" data-itf="d">日足</button>
+          <button type="button" data-itf="w">週足</button>
+          <button type="button" data-itf="m">月足</button>
+        </div>
+        <div class="seg" id="isc" role="group" aria-label="目盛り">
+          <button type="button" data-isc="lin">通常</button>
+          <button type="button" data-isc="log">対数</button>
+        </div>
+      </div>
+      <div class="ctlrow"><div class="seg sm" id="irange" role="group" aria-label="期間"></div></div>
+      <div class="readout" id="iread"></div>
+      <div class="ichart" id="ichart"></div>
+    </section>
     <div class="cols" id="cols">
       <section class="panel">
         <h2>指数への寄与 <span>期初ウェイト×騰落率（%pt）</span></h2>
@@ -306,7 +334,8 @@ const secJa=s=>SEC_JA[s]||s;
 
 let DATA=null, STOCKS=[], BY={}, CAPTOTAL=0, SECTORS=[], SWC={};
 const store={get(k,d){try{const v=localStorage.getItem("ndxhm."+k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem("ndxhm."+k,v)}catch(e){}}};
-const state={period:store.get("period","d1"),view:store.get("view","map"),wscope:store.get("wscope","20"),rrange:store.get("rrange","10"),rsel:null,rmonth:null,zoom:null,sel:null};
+const state={period:store.get("period","d1"),view:store.get("view","map"),wscope:store.get("wscope","20"),rrange:store.get("rrange","10"),rsel:null,rmonth:null,zoom:null,sel:null,
+  itf:store.get("itf","d"),isc:store.get("isc","lin"),irange:{d:store.get("ir_d","6M"),w:store.get("ir_w","2Y"),m:store.get("ir_m","ALL")},ici:null};
 if(state.view==="rank")state.view="weight";  // the rank chart now lives in the weight view
 if(!["map","list","weight"].includes(state.view))state.view="map";
 if(!["10","5","3"].includes(state.rrange))state.rrange="10";
@@ -393,6 +422,62 @@ function renderControls(){
   document.querySelectorAll("#views button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===state.view));
   document.querySelectorAll("#wscope button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.w===state.wscope));
   document.querySelectorAll("#rrange button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.rr===state.rrange));
+}
+/* ---------- index candle chart (map view) ---------- */
+let IDX=null;   // {daily:[[yyyymmdd,o,h,l,c],...], today:[...]}
+const IRANGES={d:[["3M","3ヶ月",63],["6M","6ヶ月",126],["1Y","1年",252],["2Y","2年",504]],w:[["1Y","1年",52],["2Y","2年",104],["5Y","5年",260],["ALL","全期間",0]],m:[["5Y","5年",60],["10Y","10年",120],["ALL","全期間",0]]};
+function idxDays(){
+  if(!IDX||!Array.isArray(IDX.daily))return[];
+  const rows=[...IDX.daily];const t=IDX.today, q=DATA&&DATA.index;
+  if(t&&(!rows.length||t[0]>rows[rows.length-1][0]))rows.push(t);
+  return rows.map(([n,o,h,l,c])=>{const s=String(n);return{n,d:`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`,t:Date.UTC(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6,8)),o,h,l,c}});
+}
+function idxBars(tf){
+  const D=idxDays();if(tf==="d")return D;
+  const out=[];let cur=null,key=null;
+  D.forEach(x=>{
+    let k;if(tf==="m")k=x.d.slice(0,7);else{const wd=(new Date(x.t).getUTCDay()+6)%7;k=new Date(x.t-wd*864e5).toISOString().slice(0,10)}
+    if(k!==key){cur={...x,last:x.d};out.push(cur);key=k}else{cur.h=Math.max(cur.h,x.h);cur.l=Math.min(cur.l,x.l);cur.c=x.c;cur.last=x.d}
+  });
+  return out;
+}
+function idxLogTicks([a,b]){
+  for(const st of [[1,2,5],[1,1.5,2,3,5,7],[1,1.2,1.5,2,2.5,3,4,5,6,8]]){
+    const out=[];for(let e=Math.floor(Math.log10(a));e<=Math.ceil(Math.log10(b));e++)st.forEach(m=>{const v=+(m*10**e).toPrecision(3);if(v>=a&&v<=b)out.push(v)});
+    if(out.length>=4)return out.slice(0,9);
+  }
+  return d3.scaleLinear().domain([a,b]).ticks(5);
+}
+function renderIdx(){
+  const box=$("ibox"), el=$("ichart");
+  box.hidden=state.view!=="map"||!!state.zoom;
+  document.querySelectorAll("#itf button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.itf===state.itf));
+  document.querySelectorAll("#isc button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.isc===state.isc));
+  $("irange").innerHTML=IRANGES[state.itf].map(([k,l])=>`<button type="button" data-ir="${k}" aria-pressed="${k===state.irange[state.itf]}">${l}</button>`).join("");
+  if(box.hidden)return;
+  const all=idxBars(state.itf), r=IRANGES[state.itf].find(x=>x[0]===state.irange[state.itf])||IRANGES[state.itf][0];
+  const B=r[2]?all.slice(-r[2]):all;
+  if(!B.length){el.innerHTML=`<div class="empty" style="padding:30px 10px">指数のデータを準備中です</div>`;$("iread").innerHTML="";el._geo=null;return}
+  const W=Math.max(300,el.clientWidth), narrow=W<560, H=narrow?Math.round(W*.8):380;
+  const ML=6,MR=54,MT=8,MB=22, PW=W-ML-MR, PH=H-MT-MB, n=B.length, band=PW/n, bw=Math.max(1,Math.min(14,band*.7)), x=i=>ML+band*(i+.5);
+  const lo=d3.min(B,b=>b.l), hi=d3.max(B,b=>b.h), log=state.isc==="log";
+  const y=(log?d3.scaleLog():d3.scaleLinear()).domain(log?[lo*.97,hi*1.03]:[lo-(hi-lo)*.05,hi+(hi-lo)*.05]).range([MT+PH,MT]);
+  if(!log)y.nice();
+  const tk=v=>Math.round(v).toLocaleString("en-US");
+  let g="";(log?idxLogTicks(y.domain()):y.ticks(5)).forEach(v=>{g+=`<line class="grid" x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}"/><text class="ax" x="${ML+PW+6}" y="${y(v)+4}">${tk(v)}</text>`});
+  let lastLab="";const span=(B[n-1].t-B[0].t)/864e5;
+  B.forEach((b,i)=>{const lab=span>800?b.d.slice(0,4):b.d.slice(0,7);if(lab!==lastLab){const show=span>800?(+lab%(span>3000?2:1)===0):(+b.d.slice(5,7)%(span>300?3:1)===0);if(show&&i>0)g+=`<line class="grid" x1="${x(i)}" x2="${x(i)}" y1="${MT}" y2="${MT+PH}" opacity=".5"/><text class="ax" x="${x(i)}" y="${H-6}" text-anchor="middle">${span>800?"’"+lab.slice(2):(+lab.slice(5)===1?lab.slice(2,4)+"/1":+lab.slice(5)+"月")}</text>`}lastLab=lab});
+  let c="";B.forEach((b,i)=>{const col=b.c>=b.o?C.up:C.down, xc=x(i).toFixed(1);
+    c+=`<line x1="${xc}" x2="${xc}" y1="${y(b.h).toFixed(1)}" y2="${y(b.l).toFixed(1)}" stroke="${col}" stroke-width="1"/>`;
+    const y1=y(Math.max(b.o,b.c)),y2=y(Math.min(b.o,b.c));c+=`<rect x="${(x(i)-bw/2).toFixed(1)}" y="${y1.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,y2-y1).toFixed(1)}" fill="${col}"/>`});
+  const ci=state.ici!=null&&state.ici<n?state.ici:null;
+  const xh=ci!=null?`<line class="xh" x1="${x(ci)}" x2="${x(ci)}" y1="${MT}" y2="${MT+PH}"/>`:"";
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="ナスダック100指数のローソク足チャート">${g}${c}${xh}<rect class="ihit" x="${ML}" y="${MT}" width="${PW}" height="${PH}" fill="transparent"/></svg>`;
+  el._geo={ML,PW,n};
+  const b=B[ci!=null?ci:n-1], f=v=>v.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const lbl=state.itf==="d"?b.d:state.itf==="w"?`${b.d}〜${b.last.slice(5)}`:b.d.slice(0,7);
+  // always two rows, so the chart below never shifts
+  $("iread").innerHTML=`<div class="rrow"><b>${lbl}</b><span>終 <b>${f(b.c)}</b></span></div><div class="rrow"><span>始 ${f(b.o)}</span><span>高 ${f(b.h)}</span><span>安 ${f(b.l)}</span></div>`;
 }
 // the Nasdaq-100 index level, like the price at the top of the TQQQ app
 function renderPrice(){
@@ -606,6 +691,7 @@ function renderMapOrList(){
   $("back").hidden=!state.zoom;
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
   $("hint").textContent=state.zoom?`${secJa(state.zoom)}を表示中`:({map:"面積＝指数ウェイト、色＝騰落率。タップで詳細",list:`${PLABEL[state.period]}の騰落率順。タップで詳細`,weight:`指数ウェイト：${weightNote()}。タップで詳細`})[v];
+  renderIdx();
   if(v==="map")renderMap();else if(v==="list")renderList();else if(v==="weight"){renderWeights();if(!state.zoom)renderRanks()}
 }
 function renderAll(){
@@ -622,7 +708,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v21";
+const APP_VER="ndx-heatmap-v22";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
@@ -638,6 +724,7 @@ async function load(manual){
     const d=await r.json();
     if(!d||!Array.isArray(d.stocks)||!d.perf)throw new Error("bad data");
     if(!RH||manual)await loadRanks();
+    try{const ri=await fetch("data/ndx_daily.json?ts="+Date.now(),{cache:"no-store"});if(ri.ok)IDX=await ri.json()}catch(e){}
     if(!DATA||d.updatedAt!==DATA.updatedAt||manual){setData(d);renderAll()}
     else renderStatus();
   }catch(e){
@@ -654,6 +741,9 @@ document.addEventListener("click",e=>{
   const rk=e.target.closest("[data-rk]");if(rk){state.rsel=state.rsel===rk.dataset.rk?null:rk.dataset.rk;renderRanks();return}
   const ws=e.target.closest("[data-w]");if(ws){state.wscope=ws.dataset.w;store.set("wscope",state.wscope);renderControls();renderWeights();return}
   const se=e.target.closest("[data-sec]");if(se){state.zoom=state.zoom===se.dataset.sec?null:se.dataset.sec;renderSectors();renderMapOrList();$("map").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});return}
+  const itf=e.target.closest("[data-itf]");if(itf){state.itf=itf.dataset.itf;store.set("itf",state.itf);state.ici=null;renderIdx();return}
+  const isc=e.target.closest("[data-isc]");if(isc){state.isc=isc.dataset.isc;store.set("isc",state.isc);renderIdx();return}
+  const ir=e.target.closest("[data-ir]");if(ir){state.irange[state.itf]=ir.dataset.ir;store.set("ir_"+state.itf,ir.dataset.ir);state.ici=null;renderIdx();return}
   if(e.target.closest("#back")){state.zoom=null;renderSectors();renderMapOrList();return}
   const t=e.target.closest("[data-t]");if(t){const tk=t.dataset.t;state.sel=state.sel===tk?null:tk;$("tip").hidden=true;renderMapOrList();renderDetail();return}
 });
@@ -674,7 +764,7 @@ $("map").addEventListener("pointermove",e=>{
 });
 $("map").addEventListener("pointerleave",()=>{tip.hidden=true});
 
-let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(DATA&&state.view==="map")renderMap();if(DATA&&state.view==="weight"&&!state.zoom)renderRanks()},80)}).observe($("map").parentElement);
+let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(DATA&&state.view==="map")renderMap();if(DATA&&state.view==="weight"&&!state.zoom)renderRanks();if(DATA&&state.view==="map")renderIdx()},80)}).observe($("map").parentElement);
 // rank chart: a tap (or click) picks the month, sliding a finger sideways moves it,
 // a vertical swipe scrolls the page and keeps it; a tap outside the chart clears it
 {const rc=$("rchart");let t=null;
@@ -690,11 +780,26 @@ let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(DATA&&stat
  rc.addEventListener("pointerup",e=>{if(t&&e.pointerId===t.id&&(t.slide||Math.hypot(e.clientX-t.x,e.clientY-t.y)<10))at(e);t=null});
  rc.addEventListener("pointercancel",()=>{t=null});
  let out=null;
- document.addEventListener("pointerdown",e=>{out=e.target.closest("#rchart,button,a,[data-rk],[data-t]")?null:{x:e.clientX,y:e.clientY,id:e.pointerId}},true);
+ document.addEventListener("pointerdown",e=>{out=e.target.closest("#rchart,#ichart,button,a,[data-rk],[data-t]")?null:{x:e.clientX,y:e.clientY,id:e.pointerId}},true);
  document.addEventListener("pointercancel",()=>{out=null},true);
  document.addEventListener("pointerup",e=>{const o=out;out=null;
-   if(!o||e.pointerId!==o.id||Math.hypot(e.clientX-o.x,e.clientY-o.y)>=10||state.rmonth==null)return;
-   state.rmonth=null;if(DATA&&state.view==="weight")renderRanks()},true);}
+   if(!o||e.pointerId!==o.id||Math.hypot(e.clientX-o.x,e.clientY-o.y)>=10||(state.rmonth==null&&state.ici==null))return;
+   state.rmonth=null;state.ici=null;if(DATA&&state.view==="weight")renderRanks();if(DATA&&state.view==="map")renderIdx()},true);}
+// index chart: the same tap / slide / scroll behaviour as the rank chart
+{const el=$("ichart");let t=null;
+ const at=e=>{const g=el._geo,svg=el.querySelector("svg");if(!g||!svg)return;const r=svg.getBoundingClientRect();
+   const i=Math.max(0,Math.min(g.n-1,Math.floor(((e.clientX-r.left)*(svg.viewBox.baseVal.width/r.width)-g.ML)/g.PW*g.n)));
+   if(i!==state.ici){state.ici=i;renderIdx()}};
+ el.addEventListener("pointerdown",e=>{if(e.target.closest(".ihit"))t={x:e.clientX,y:e.clientY,id:e.pointerId,slide:false}});
+ el.addEventListener("pointermove",e=>{
+   if(e.pointerType==="mouse"&&!t){if(e.target.closest(".ihit"))at(e);return}
+   if(!t||e.pointerId!==t.id)return;
+   const dx=e.clientX-t.x,dy=e.clientY-t.y;
+   if(!t.slide&&Math.abs(dx)>6&&Math.abs(dx)>Math.abs(dy))t.slide=true;
+   if(t.slide)at(e);
+ });
+ el.addEventListener("pointerup",e=>{if(t&&e.pointerId===t.id&&(t.slide||Math.hypot(e.clientX-t.x,e.clientY-t.y)<10))at(e);t=null});
+ el.addEventListener("pointercancel",()=>{t=null});}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")load(false)});
 // No refresh button: the data is published every 5 minutes, so the app checks for it every minute
 setInterval(()=>{if(document.visibilityState==="visible")load(false)},60*1000);
