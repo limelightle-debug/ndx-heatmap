@@ -1,5 +1,7 @@
 // Offline shell + latest data. Bump CACHE when the app files change.
-const CACHE = "ndx-heatmap-v18";
+const CACHE = "ndx-heatmap-v19";
+// Always ask the server (revalidating the browser's own cache), so a new version shows up at once.
+const fresh = req => fetch(req.url, { cache: "no-cache", credentials: "same-origin" });
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./d3.min.js",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png", "./icons/icon-maskable-512.png", "./icons/avatar.jpg", "./icons/app.png"];
 
@@ -20,7 +22,7 @@ self.addEventListener("fetch", e => {
   // Data: always try the network first, fall back to the last copy.
   if (url.pathname.endsWith("/data/ndx.json")) {
     const key = new Request(url.origin + url.pathname);
-    e.respondWith(fetch(e.request).then(res => {
+    e.respondWith(fresh(e.request).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(key, copy)); }
       return res;
     }).catch(() => caches.match(key)));
@@ -28,7 +30,7 @@ self.addEventListener("fetch", e => {
   }
 
   // App files: network first so updates arrive, cache when offline.
-  e.respondWith(fetch(e.request).then(res => {
+  e.respondWith(fresh(e.request).then(res => {
     if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
     return res;
   }).catch(() => caches.match(e.request).then(r => r || caches.match("./index.html"))));
