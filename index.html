@@ -277,7 +277,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
         <div class="rinfo" id="rinfo"></div>
       </div>
     </section>
-    <div class="cols">
+    <div class="cols" id="cols">
       <section class="panel">
         <h2>指数への寄与 <span>期初ウェイト×騰落率（%pt）</span></h2>
         <div class="csum" id="csum"></div>
@@ -602,6 +602,7 @@ function renderDetail(){
 function renderMapOrList(){
   const v=state.view;
   $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="weight"||!!state.zoom;
+  $("cols").hidden=v==="weight";  // contributions and sectors belong to the map and ranking views
   $("back").hidden=!state.zoom;
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
   $("hint").textContent=state.zoom?`${secJa(state.zoom)}を表示中`:({map:"面積＝指数ウェイト、色＝騰落率。タップで詳細",list:`${PLABEL[state.period]}の騰落率順。タップで詳細`,weight:`指数ウェイト：${weightNote()}。タップで詳細`})[v];
@@ -621,7 +622,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v20";
+const APP_VER="ndx-heatmap-v21";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
