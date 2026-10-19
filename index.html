@@ -99,7 +99,8 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 #map{position:relative;width:100%;background:var(--bg);border-radius:8px;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .sec{position:absolute;pointer-events:none}
 .sec .sh{position:absolute;left:0;right:0;top:0;height:20px;display:flex;align-items:center;gap:6px;padding:0 4px;font-size:11.5px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden}
-.sec .sh b{font-family:var(--f-tick);font-size:13px;font-weight:600}
+.sec .sh b{font-family:var(--f-tick);font-size:13px;font-weight:600;flex:none}
+.sec .sh span{min-width:2.3em;overflow:hidden;text-overflow:ellipsis}
 .tile{position:absolute;appearance:none;border:0;padding:0;margin:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;font-family:var(--f-tick);line-height:1;transition:filter .12s}
 .tile:hover{filter:brightness(1.12)}
 .tile.sel{outline:2px solid var(--ink);outline-offset:-2px;z-index:2}
@@ -431,6 +432,13 @@ function renderMap(){
     const inds={};STOCKS.filter(s=>s.sec===sec).forEach(s=>{(inds[s.ind]=inds[s.ind]||[]).push({t:s.t,cap:s.w})});
     return{name:sec,children:Object.entries(inds).map(([ind,ch])=>({name:ind,children:ch}))};
   });
+  // very small sectors (energy, financials, ...) get a minimum share of the area,
+  // so their stocks are big enough to see and tap under the sector heading
+  if(!state.zoom){
+    const tot=d3.sum(STOCKS,s=>s.w), floor=tot*(narrow?.045:.02);
+    secs.forEach(sec=>{const v=d3.sum(sec.children,i=>d3.sum(i.children,c=>c.cap));
+      if(v>0&&v<floor)sec.children.forEach(i=>i.children.forEach(c=>{c.cap*=floor/v}))});
+  }
   const root=d3.hierarchy({name:"root",children:secs}).sum(d=>d.cap||0).sort((a,b)=>b.value-a.value);
   d3.treemap().size([W,H]).tile(d3.treemapSquarify.ratio(1.15))
     .paddingOuter(d=>d.depth===1?2:0).paddingTop(d=>d.depth===1?20:0).paddingInner(d=>d.depth===0?3:1).round(true)(root);
@@ -442,7 +450,8 @@ function renderMap(){
   root.leaves().forEach(l=>{
     const t=l.data.t, w=l.x1-l.x0, h=l.y1-l.y0; if(!t||w<1||h<1)return;
     const v=val(t), bg=color(v), ink=inkOn(bg);
-    const fs=Math.max(9,Math.min(32,Math.sqrt(w*h)/4.1));
+    // ticker size from the tile's area, narrowed to fit its width
+    const fs=Math.max(9,Math.min(32,Math.sqrt(w*h)/4.1,(w-4)/(.6*t.length)));
     const showT=w>=fs*.6*t.length+4&&h>=fs+3;
     const pfs=Math.max(9,fs*.62);
     const ptxt=fmt(v);
