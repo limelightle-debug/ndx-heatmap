@@ -136,6 +136,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .wnote{font-size:11.5px;color:var(--muted);margin:10px 0 0}
 /* rank history view */
 #ranks{margin-top:26px;padding-top:16px;border-top:1px solid var(--line)}
+.wtitle{margin:2px 0 10px}
 .rtop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
 .rtitle{font-size:13px;font-weight:700;color:var(--ink2);letter-spacing:.04em}
 .rkey{display:flex;gap:12px;font-size:11.5px;color:var(--muted);flex-wrap:wrap;margin-bottom:4px}
@@ -247,6 +248,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
       <div id="map" role="img" aria-label="ナスダック100の銘柄別騰落率ヒートマップ"></div>
       <div id="list" hidden></div>
       <div id="weights" hidden>
+        <div class="rtitle wtitle">ナスダック100 指数構成銘柄比率</div>
         <div class="wtop">
           <div class="wstats" id="wstats"></div>
           <div class="seg" id="wscope" role="group" aria-label="表示する銘柄">
