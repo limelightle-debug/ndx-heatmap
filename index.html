@@ -433,20 +433,35 @@ function renderMap(){
     const inds={};STOCKS.filter(s=>s.sec===sec).forEach(s=>{(inds[s.ind]=inds[s.ind]||[]).push({t:s.t,cap:s.w})});
     return{name:sec,children:Object.entries(inds).map(([ind,ch])=>({name:ind,children:ch}))};
   });
-  // very small sectors (energy, financials, ...) get a minimum share of the area,
-  // so their stocks are big enough to see and tap under the sector heading
+  // Areas stay true to index weight. Sectors too small to hold their own heading
+  // (energy, materials, utilities, financials, ...) share one "その他" box, so their stocks show.
+  const OTHER="__other";
   if(!state.zoom){
-    const tot=d3.sum(STOCKS,s=>s.w), floor=tot*(narrow?.045:.02);
-    secs.forEach(sec=>{const v=d3.sum(sec.children,i=>d3.sum(i.children,c=>c.cap));
-      if(v>0&&v<floor)sec.children.forEach(i=>i.children.forEach(c=>{c.cap*=floor/v}))});
+    const tot=d3.sum(STOCKS,x=>x.w), lim=tot*(narrow?.02:.01), wsec=sec=>d3.sum(sec.children,i=>d3.sum(i.children,c=>c.cap));
+    const small=secs.filter(sec=>wsec(sec)<lim);
+    if(small.length>1){secs.splice(0,secs.length,...secs.filter(sec=>!small.includes(sec)),{name:OTHER,children:small})}
   }
-  const root=d3.hierarchy({name:"root",children:secs}).sum(d=>d.cap||0).sort((a,b)=>b.value-a.value);
-  d3.treemap().size([W,H]).tile(d3.treemapSquarify.ratio(1.15))
-    .paddingOuter(d=>d.depth===1?2:0).paddingTop(d=>d.depth===1?20:0).paddingInner(d=>d.depth===0?3:1).round(true)(root);
+  // Headings and gaps take space out of each box, more so in small ones. Re-run the layout a few
+  // times, enlarging each box just enough that its tiles' area matches its index weight.
+  const tm=d3.treemap().size([W,H]).tile(d3.treemapSquarify.ratio(1.15))
+    .paddingOuter(d=>d.depth===1?2:0).paddingTop(d=>d.depth===1?20:0).paddingInner(d=>d.depth===0?3:1).round(true);
+  // (A box can change shape between runs, so the step is damped and the closest run is kept.)
+  const k={};let root,best=Infinity;
+  for(let it=0;it<10;it++){
+    const r=d3.hierarchy({name:"root",children:secs}).sum(d=>d.cap?d.cap*(k[d.top]||1):0).sort((a,b)=>b.value-a.value);
+    if(it===0)r.children.forEach(n=>n.leaves().forEach(l=>{l.data.top=n.data.name}));
+    tm(r);
+    const area=n=>d3.sum(n.leaves(),l=>(l.x1-l.x0)*(l.y1-l.y0)), cap=n=>d3.sum(n.leaves(),l=>l.data.cap);
+    const K=area(r)/cap(r);let worst=0;
+    r.children.forEach(n=>{const a=area(n);if(!(a>0))return;const q=a/cap(n)/K;worst=Math.max(worst,Math.abs(Math.log(q)));k[n.data.name]=(k[n.data.name]||1)/Math.sqrt(q)});
+    if(worst<best){best=worst;root=r}
+    if(worst<.02)break;
+  }
   let html="";
   (root.children||[]).forEach(s=>{
-    const r=wret(STOCKS.filter(x=>x.sec===s.data.name));
-    html+=`<div class="sec" style="left:${s.x0}px;top:${s.y0}px;width:${s.x1-s.x0}px;height:${s.y1-s.y0}px"><div class="sh"><span>${secJa(s.data.name)}</span><b class="${cls(r)}">${fmt(r,2)}</b></div></div>`;
+    const other=s.data.name===OTHER, names=other?s.data.children.map(c=>c.name):[s.data.name];
+    const r=wret(STOCKS.filter(x=>names.includes(x.sec)));
+    html+=`<div class="sec" style="left:${s.x0}px;top:${s.y0}px;width:${s.x1-s.x0}px;height:${s.y1-s.y0}px"><div class="sh"><span>${other?"その他":secJa(s.data.name)}</span><b class="${cls(r)}">${fmt(r,2)}</b></div></div>`;
   });
   root.leaves().forEach(l=>{
     const t=l.data.t, w=l.x1-l.x0, h=l.y1-l.y0; if(!t||w<1||h<1)return;
@@ -460,6 +475,8 @@ function renderMap(){
     html+=`<button type="button" class="tile${state.sel===t?" sel":""}" data-t="${t}" style="left:${l.x0}px;top:${l.y0}px;width:${w}px;height:${h}px;background:${bg};color:${ink}" aria-label="${t} ${ptxt}">${showT?`<span class="t" style="font-size:${fs}px">${t}</span>`:""}${showP?`<span class="p" style="font-size:${pfs}px">${ptxt}</span>`:""}</button>`;
   });
   el.innerHTML=html;
+  // the sector name comes first; its % stays only when both fit across the box
+  el.querySelectorAll(".sec .sh").forEach(h=>{const n=h.querySelector("span"),b=h.querySelector("b");if(b&&n.scrollWidth+6+b.offsetWidth>h.clientWidth-8)b.remove()});
 }
 function renderList(){
   const list=STOCKS.filter(s=>!state.zoom||s.sec===state.zoom).sort((a,b)=>(val(b.t)??-1e9)-(val(a.t)??-1e9));
