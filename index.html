@@ -187,6 +187,10 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .pc.cur{outline:2px solid var(--ink);outline-offset:-2px}
 .dlink{display:inline-block;margin-top:12px;font-size:13px;color:var(--accent)}
 .foot{margin-top:18px;font-size:11.5px;color:var(--muted);line-height:1.7}
+.foot a{color:var(--accent,var(--ink2))}
+.foot.lab{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
+.labname{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;color:var(--ink);letter-spacing:.06em}
+.labname img{width:36px;height:36px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px var(--line)}
 
 @media (min-width:900px){
   #detail{left:auto;right:max(20px,env(safe-area-inset-right,0px));bottom:max(20px,env(safe-area-inset-bottom,0px));width:360px;border:1px solid var(--line);border-radius:12px;padding:16px}
@@ -252,7 +256,6 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
           </div>
         </div>
         <div id="wlist"></div>
-        <p class="wnote">ウェイトは、ナスダック100に完全連動するETF「QQQ」（Invesco）の保有比率です。1日1回更新されます。GOOGとGOOGLはAlphabetとしてまとめています。バーの色は選んでいる期間の騰落率です。</p>
       </div>
       <div id="ranks" hidden>
         <div class="rtop">
@@ -266,7 +269,6 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
         <div class="rkey" id="rkey"></div>
         <div id="rchart"></div>
         <div class="rinfo" id="rinfo"></div>
-        <p class="wnote">現在の時価総額上位20社の、ナスダック100の現在の構成銘柄100社の中での順位です。過去の月は月末時点、今月は最新の値です（companiesmarketcap.com、今月分は finviz）。構成銘柄になる前の期間も含めて順位を付けているため、当時の指数の中での順位とは異なる場合があります。40位より下は表示していません。</p>
       </div>
     </section>
     <div class="cols">
@@ -280,7 +282,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
         <div id="sectors"></div>
       </section>
     </div>
-    <p class="foot">データ：finviz（NASDAQ 100）。米国市場の取引時間中は約15分ごとに自動更新されます（数分〜十数分の遅れあり）。面積・加重平均・寄与度は、QQQ（Invesco）の保有比率から求めた指数ウェイトで計算しています（1日1回更新）。指数の騰落率と寄与は、各期間の期初ウェイト（現在のウェイトを騰落率で割り戻した値）で計算するため、寄与の合計は指数の騰落率と一致します。長い期間では、途中の入れ替えや四半期ごとのウェイト調整は反映されません。</p>
+    <div class="foot lab"><span class="labname"><img src="icons/avatar.jpg" alt="" width="36" height="36">恐怖指数研究所</span><a href="https://limelightle-debug.github.io/tqqq/">TQQQ を開く</a></div>
   </div>
   <div class="empty" id="empty">データを読み込んでいます…</div>
 </div>
@@ -557,7 +559,7 @@ function renderMapOrList(){
   $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="rank";
   $("back").hidden=!state.zoom;
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
-  $("hint").textContent=state.zoom?`${secJa(state.zoom)}を表示中`:({map:"面積＝指数ウェイト、色＝騰落率。タップで詳細",list:`${PLABEL[state.period]}の騰落率順。タップで詳細`,weight:`指数ウェイト：${weightNote()}。タップで詳細`,rank:"線をなぞると、その月の順位が出ます。銘柄をタップで強調"})[v];
+  $("hint").textContent=state.zoom?`${secJa(state.zoom)}を表示中`:({map:"面積＝指数ウェイト、色＝騰落率。タップで詳細",list:`${PLABEL[state.period]}の騰落率順。タップで詳細`,weight:`指数ウェイト：${weightNote()}。タップで詳細`,rank:"チャートをタップ、または横になぞると、その月の順位が出ます。銘柄をタップで強調"})[v];
   if(state.zoom&&v==="rank")$("hint").textContent="順位推移はセクターで絞り込みません";
   if(v==="map")renderMap();else if(v==="list")renderList();else if(v==="weight")renderWeights();else renderRanks();
 }
@@ -620,13 +622,26 @@ $("map").addEventListener("pointermove",e=>{
 $("map").addEventListener("pointerleave",()=>{tip.hidden=true});
 
 let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(DATA&&state.view==="map")renderMap();if(DATA&&state.view==="rank")renderRanks()},80)}).observe($("map").parentElement);
-// scrub the rank chart: the month under the finger or pointer
-{const rc=$("rchart");let down=false;
- const at=e=>{if(!e.target.closest("#rhit")&&!down)return;const m=rankMonthAt(e.clientX);if(m!=null&&m!==state.rmonth){state.rmonth=m;renderRanks()}};
- rc.addEventListener("pointerdown",e=>{if(e.target.closest("#rhit")){down=true;at(e)}});
- rc.addEventListener("pointermove",e=>{if(e.pointerType==="mouse"||down)at(e)});
- addEventListener("pointerup",()=>{down=false});
- rc.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse"){state.rmonth=null;renderRanks()}});}
+// rank chart: a tap (or click) picks the month, sliding a finger sideways moves it,
+// a vertical swipe scrolls the page and keeps it; a tap outside the chart clears it
+{const rc=$("rchart");let t=null;
+ const at=e=>{const m=rankMonthAt(e.clientX);if(m!=null&&m!==state.rmonth){state.rmonth=m;renderRanks()}};
+ rc.addEventListener("pointerdown",e=>{if(e.target.closest("#rhit"))t={x:e.clientX,y:e.clientY,id:e.pointerId,slide:false}});
+ rc.addEventListener("pointermove",e=>{
+   if(e.pointerType==="mouse"&&!t){if(e.target.closest("#rhit"))at(e);return}
+   if(!t||e.pointerId!==t.id)return;
+   const dx=e.clientX-t.x,dy=e.clientY-t.y;
+   if(!t.slide&&Math.abs(dx)>6&&Math.abs(dx)>Math.abs(dy))t.slide=true;
+   if(t.slide)at(e);
+ });
+ rc.addEventListener("pointerup",e=>{if(t&&e.pointerId===t.id&&(t.slide||Math.hypot(e.clientX-t.x,e.clientY-t.y)<10))at(e);t=null});
+ rc.addEventListener("pointercancel",()=>{t=null});
+ let out=null;
+ document.addEventListener("pointerdown",e=>{out=e.target.closest("#rchart,button,a,[data-rk],[data-t]")?null:{x:e.clientX,y:e.clientY,id:e.pointerId}},true);
+ document.addEventListener("pointercancel",()=>{out=null},true);
+ document.addEventListener("pointerup",e=>{const o=out;out=null;
+   if(!o||e.pointerId!==o.id||Math.hypot(e.clientX-o.x,e.clientY-o.y)>=10||state.rmonth==null)return;
+   state.rmonth=null;if(DATA&&state.view==="rank")renderRanks()},true);}
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",renderAll);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")load(false)});
 setInterval(()=>{if(document.visibilityState==="visible")load(false)},5*60*1000);
