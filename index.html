@@ -622,7 +622,17 @@ let loading=false;
 async function loadRanks(){
   try{const r=await fetch("data/rank_history.json",{cache:"no-cache"});if(r.ok){const j=await r.json();if(j&&j.months&&j.ranks)RH=j}}catch(e){}
 }
+// When a newer version of the app is published, reload to pick it up (the version is the
+// service worker's cache name; bump both together).
+const APP_VER="ndx-heatmap-v18";
+async function newerApp(){
+  try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
+    // at most one reload per new version, in case the page itself is still served from a cache
+    if(m&&m[1]!==APP_VER&&sessionStorage.getItem("reloadedFor")!==m[1]){sessionStorage.setItem("reloadedFor",m[1]);location.reload();return true}}catch(e){}
+  return false;
+}
 async function load(manual){
+  if(await newerApp())return;
   if(loading)return;loading=true;
   const btn=$("refresh");btn.classList.add("spin");
   try{
