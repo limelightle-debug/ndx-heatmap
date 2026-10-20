@@ -68,6 +68,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
 .panel h2{margin:0 0 10px;font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--ink2);display:flex;justify-content:space-between;gap:8px}
 .ibox{margin-top:14px}
+#cols+.ibox{margin-top:14px}
 .ctlrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .seg.sm button{padding:7px 9px;font-size:12.5px}
 .readout{font-size:12px;color:var(--ink2);height:40px;overflow:hidden;margin:8px 2px 2px;font-variant-numeric:tabular-nums}
@@ -292,6 +293,17 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
         <div class="rinfo" id="rinfo"></div>
       </div>
     </section>
+    <div class="cols" id="cols">
+      <section class="panel">
+        <h2><i class="h2t" data-i18n="contribTitle">指数への寄与</i> <span data-i18n="contribSub">期初ウェイト×騰落率（%pt）</span></h2>
+        <div class="csum" id="csum"></div>
+        <div class="contrib" id="contrib"></div>
+      </section>
+      <section class="panel">
+        <h2><i class="h2t" data-i18n="secTitle">セクター</i> <span data-i18n="secSub">タップでマップを絞り込み</span></h2>
+        <div id="sectors"></div>
+      </section>
+    </div>
     <section class="panel ibox" id="ibox" hidden>
       <h2><i class="h2t" data-i18n="idxTitle">ナスダック100指数</i> <span data-i18n="candles">ローソク足</span></h2>
       <div class="ctlrow">
@@ -309,17 +321,6 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
       <div class="readout" id="iread"></div>
       <div class="ichart" id="ichart"></div>
     </section>
-    <div class="cols" id="cols">
-      <section class="panel">
-        <h2><i class="h2t" data-i18n="contribTitle">指数への寄与</i> <span data-i18n="contribSub">期初ウェイト×騰落率（%pt）</span></h2>
-        <div class="csum" id="csum"></div>
-        <div class="contrib" id="contrib"></div>
-      </section>
-      <section class="panel">
-        <h2><i class="h2t" data-i18n="secTitle">セクター</i> <span data-i18n="secSub">タップでマップを絞り込み</span></h2>
-        <div id="sectors"></div>
-      </section>
-    </div>
     <div class="foot lab"><span class="labname"><img src="icons/avatar.jpg" alt="" width="36" height="36"><span data-i18n="lab">恐怖指数研究所</span></span><a href="https://limelightle-debug.github.io/tqqq/" data-i18n="openTqqq">TQQQ を開く</a></div>
   </div>
   <div class="empty" id="empty" data-i18n="loadingData">データを読み込んでいます…</div>
@@ -746,11 +747,20 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v26";
+const APP_VER="ndx-heatmap-v27";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
     if(m&&m[1]!==APP_VER&&sessionStorage.getItem("reloadedFor")!==m[1]){sessionStorage.setItem("reloadedFor",m[1]);location.reload();return true}}catch(e){}
+  return false;
+}
+// the index's daily bars: fetched on every poll; true when they changed (or arrived for the first time)
+let idxStamp=null;
+async function loadIdx(){
+  for(let a=0;a<2;a++){
+    try{const r=await fetch("data/ndx_daily.json?ts="+Date.now(),{cache:"no-store"});
+      if(r.ok){const j=await r.json();if(j&&Array.isArray(j.daily)&&j.daily.length){const st=j.fetchedAt+"|"+JSON.stringify(j.today);const ch=st!==idxStamp;IDX=j;idxStamp=st;return ch}}}catch(e){}
+  }
   return false;
 }
 async function load(manual){
@@ -762,9 +772,9 @@ async function load(manual){
     const d=await r.json();
     if(!d||!Array.isArray(d.stocks)||!d.perf)throw new Error("bad data");
     if(!RH||manual)await loadRanks();
-    try{const ri=await fetch("data/ndx_daily.json?ts="+Date.now(),{cache:"no-store"});if(ri.ok)IDX=await ri.json()}catch(e){}
+    const idxChanged=await loadIdx();
     if(!DATA||d.updatedAt!==DATA.updatedAt||manual){setData(d);renderAll()}
-    else renderStatus();
+    else{renderStatus();if(idxChanged)renderIdx()}
   }catch(e){
     if(!DATA){$("empty").textContent=tr("loadFail");$("status").textContent=tr("loadFailShort")}
     else renderStatus();
