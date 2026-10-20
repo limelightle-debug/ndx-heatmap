@@ -226,6 +226,8 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
   .seg button{padding:8px 9px;font-size:12.5px}
 }
 @media (prefers-reduced-motion:reduce){.tile{transition:none}}
+.lang{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--ink2);font:700 12px/1 inherit;letter-spacing:.04em;height:34px;padding:0 10px;border-radius:8px;cursor:pointer;flex:none}
+.h2t{font-style:normal}
 </style>
 </head>
 <body>
@@ -236,16 +238,17 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
         <img class="avatar" src="icons/app.png" alt="" width="42" height="42">
         <div style="min-width:0">
           <h1>Nasdaq 100</h1>
-          <div class="status" id="status">読み込み中…</div>
+          <div class="status" id="status" data-i18n="loading">読み込み中…</div>
         </div>
       </div>
+      <button type="button" class="lang" id="lang" aria-label="Language"></button>
     </div>
     <div class="controls">
       <div class="seg" id="periods" role="group" aria-label="期間"></div>
       <div class="seg" id="views" role="group" aria-label="表示">
-        <button type="button" data-v="map">マップ</button>
-        <button type="button" data-v="list">ランキング</button>
-        <button type="button" data-v="weight">ウェイト</button>
+        <button type="button" data-v="map" data-i18n="vMap">マップ</button>
+        <button type="button" data-v="list" data-i18n="vList">ランキング</button>
+        <button type="button" data-v="weight" data-i18n="vWeight">ウェイト</button>
       </div>
     </div>
   </div>
@@ -256,31 +259,31 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
     <section class="mapbox">
       <div class="maphead">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <button type="button" class="back" id="back" hidden>← 全体に戻る</button>
+          <button type="button" class="back" id="back" hidden data-i18n="back">← 全体に戻る</button>
           <span class="hint" id="hint"></span>
         </div>
         <div class="legend"><span class="num" id="lgL"></span><span class="ramp" id="ramp"></span><span class="num" id="lgR"></span></div>
       </div>
-      <div id="map" role="img" aria-label="ナスダック100の銘柄別騰落率ヒートマップ"></div>
+      <div id="map" role="img" aria-label="Nasdaq 100 heatmap"></div>
       <div id="list" hidden></div>
       <div id="weights" hidden>
-        <div class="rtitle wtitle">ナスダック100 指数構成銘柄比率</div>
+        <div class="rtitle wtitle" data-i18n="wTitle">ナスダック100 指数構成銘柄比率</div>
         <div class="wtop">
           <div class="wstats" id="wstats"></div>
           <div class="seg" id="wscope" role="group" aria-label="表示する銘柄">
-            <button type="button" data-w="20">トップ20</button>
-            <button type="button" data-w="all">全銘柄</button>
+            <button type="button" data-w="20" data-i18n="top20">トップ20</button>
+            <button type="button" data-w="all" data-i18n="allStocks">全銘柄</button>
           </div>
         </div>
         <div id="wlist"></div>
       </div>
       <div id="ranks" hidden>
         <div class="rtop">
-          <div class="rtitle">時価総額の順位推移（月末）</div>
+          <div class="rtitle" data-i18n="rTitle">時価総額の順位推移（月末）</div>
           <div class="seg" id="rrange" role="group" aria-label="期間">
-            <button type="button" data-rr="10">10年</button>
-            <button type="button" data-rr="5">5年</button>
-            <button type="button" data-rr="3">3年</button>
+            <button type="button" data-rr="10" data-i18n="y10">10年</button>
+            <button type="button" data-rr="5" data-i18n="y5">5年</button>
+            <button type="button" data-rr="3" data-i18n="y3">3年</button>
           </div>
         </div>
         <div class="rkey" id="rkey"></div>
@@ -289,16 +292,16 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
       </div>
     </section>
     <section class="panel ibox" id="ibox" hidden>
-      <h2>ナスダック100指数 <span>ローソク足</span></h2>
+      <h2><i class="h2t" data-i18n="idxTitle">ナスダック100指数</i> <span data-i18n="candles">ローソク足</span></h2>
       <div class="ctlrow">
         <div class="seg" id="itf" role="group" aria-label="足">
-          <button type="button" data-itf="d">日足</button>
-          <button type="button" data-itf="w">週足</button>
-          <button type="button" data-itf="m">月足</button>
+          <button type="button" data-itf="d" data-i18n="tfD">日足</button>
+          <button type="button" data-itf="w" data-i18n="tfW">週足</button>
+          <button type="button" data-itf="m" data-i18n="tfM">月足</button>
         </div>
         <div class="seg" id="isc" role="group" aria-label="目盛り">
-          <button type="button" data-isc="lin">通常</button>
-          <button type="button" data-isc="log">対数</button>
+          <button type="button" data-isc="lin" data-i18n="scLin">通常</button>
+          <button type="button" data-isc="log" data-i18n="scLog">対数</button>
         </div>
       </div>
       <div class="ctlrow"><div class="seg sm" id="irange" role="group" aria-label="期間"></div></div>
@@ -307,18 +310,18 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
     </section>
     <div class="cols" id="cols">
       <section class="panel">
-        <h2>指数への寄与 <span>期初ウェイト×騰落率（%pt）</span></h2>
+        <h2><i class="h2t" data-i18n="contribTitle">指数への寄与</i> <span data-i18n="contribSub">期初ウェイト×騰落率（%pt）</span></h2>
         <div class="csum" id="csum"></div>
         <div class="contrib" id="contrib"></div>
       </section>
       <section class="panel">
-        <h2>セクター <span>タップでマップを絞り込み</span></h2>
+        <h2><i class="h2t" data-i18n="secTitle">セクター</i> <span data-i18n="secSub">タップでマップを絞り込み</span></h2>
         <div id="sectors"></div>
       </section>
     </div>
-    <div class="foot lab"><span class="labname"><img src="icons/avatar.jpg" alt="" width="36" height="36">恐怖指数研究所</span><a href="https://limelightle-debug.github.io/tqqq/">TQQQ を開く</a></div>
+    <div class="foot lab"><span class="labname"><img src="icons/avatar.jpg" alt="" width="36" height="36"><span data-i18n="lab">恐怖指数研究所</span></span><a href="https://limelightle-debug.github.io/tqqq/" data-i18n="openTqqq">TQQQ を開く</a></div>
   </div>
-  <div class="empty" id="empty">データを読み込んでいます…</div>
+  <div class="empty" id="empty" data-i18n="loadingData">データを読み込んでいます…</div>
 </div>
 
 <div id="tip" hidden></div>
@@ -326,11 +329,44 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 
 <script src="d3.min.js"></script>
 <script>
-const PERIODS=[["d1","1日"],["w1","1週"],["w4","1ヶ月"],["w13","3ヶ月"],["w26","6ヶ月"],["ytd","年初来"],["w52","1年"]];
-const PLABEL=Object.fromEntries(PERIODS);
+/* ---------- language (日本語 / English) ---------- */
+let LANG=(()=>{try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
+const MONS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const I18N={
+ ja:{loading:"読み込み中…",loadingData:"データを読み込んでいます…",vMap:"マップ",vList:"ランキング",vWeight:"ウェイト",back:"← 全体に戻る",wTitle:"ナスダック100 指数構成銘柄比率",top20:"トップ20",allStocks:"全銘柄",rTitle:"時価総額の順位推移（月末）",y10:"10年",y5:"5年",y3:"3年",
+  tfD:"日足",tfW:"週足",tfM:"月足",scLin:"通常",scLog:"対数",idxTitle:"ナスダック100指数",candles:"ローソク足",contribTitle:"指数への寄与",contribSub:"期初ウェイト×騰落率（%pt）",secTitle:"セクター",secSub:"タップでマップを絞り込み",lab:"恐怖指数研究所",openTqqq:"TQQQ を開く",switchTo:"EN",
+  d1:"1日",w1:"1週",w4:"1ヶ月",w13:"3ヶ月",w26:"6ヶ月",ytd:"年初来",w52:"1年",r3M:"3ヶ月",r6M:"6ヶ月",r1Y:"1年",r2Y:"2年",r5Y:"5年",r10Y:"10年",rALL:"全期間",
+  cap:m=>m>=1e6?(m/1e6).toFixed(2)+"兆ドル":Math.round(m/100).toLocaleString()+"億ドル",updated:v=>`更新 ${v}`,open:"米国市場 取引中",closed:"米国市場 時間外",stale:"更新が遅れています",
+  wApprox:"時価総額ベースの概算",wQqq:(m,d)=>`QQQの保有比率（${m}/${d}時点）`,idxPrep:"指数のデータを準備中です",monthN:m=>m+"月",idxAria:"ナスダック100指数のローソク足チャート",cl:"終",op:"始",hi:"高",lo:"安",high:"高値",low:"安値",
+  idxName:"ナスダック100指数",latest:"最新値",closeOf:d=>`${d}の終値`,closeW:"終値",prevClose:"前日終値",idxW:p=>`指数加重・${p}`,nStocks:n=>`${n}銘柄`,upDown:"上昇 / 下落",upRatio:v=>`上昇比率 ${v}%`,best:"最大上昇",worst:"最大下落",
+  sum:"合計",sumEq:p=>`（＝指数加重・${p}）`,none:"該当なし",push:"押し上げ",drag:"押し下げ",other:"その他",top10:"上位10社",top20s:"上位20社",rest:n=>`残り${n}社`,rankBelow:r=>`${r}位以下`,
+  ym:k=>{const[y,m]=k.split("-");return`${y}年${+m}月`},rLoading:"順位の履歴を読み込んでいます…",rAria:"時価総額上位20社の順位推移",up:"上昇",down:"下落",flat:"横ばい",rKeyNote:n=>`${n}年前（上場時）と比べて3位以上の変化`,
+  rSel:(t,ym,f,c,ym2,m)=>`<b>${t}</b>　${ym} ${f}位 → 現在 ${c}位${m!=null?`（${ym2}は${m}位）`:""}`,rankOf:ym=>`${ym}の順位`,newest:"最新",monthEnd:"月末",rNote:"↑↓は、その月から現在までの順位の変化です。",
+  close:"閉じる",mcap:"時価総額",idxWeight:"指数ウェイト",contribP:p=>`寄与（${p}）`,startW:"期初ウェイト",finviz:t=>`finvizで${t}を開く ↗`,showing:s=>`${s}を表示中`,
+  hintMap:"面積＝指数ウェイト、色＝騰落率。タップで詳細",hintList:p=>`${p}の騰落率順。タップで詳細`,hintWeight:n=>`指数ウェイト：${n}。タップで詳細`,loadFail:"データを読み込めませんでした。通信状況を確認して、しばらくしてから開き直してください。",loadFailShort:"読み込みに失敗しました"},
+ en:{loading:"Loading…",loadingData:"Loading data…",vMap:"Map",vList:"Ranking",vWeight:"Weights",back:"← Back to all",wTitle:"Nasdaq 100 index weights",top20:"Top 20",allStocks:"All",rTitle:"Market-cap rank history (month-end)",y10:"10Y",y5:"5Y",y3:"3Y",
+  tfD:"Daily",tfW:"Weekly",tfM:"Monthly",scLin:"Linear",scLog:"Log",idxTitle:"Nasdaq 100 index",candles:"Candles",contribTitle:"Contribution to the index",contribSub:"Start weight × return (pt)",secTitle:"Sectors",secSub:"Tap to filter the map",lab:"Fear Index Research Institute",openTqqq:"Open TQQQ",switchTo:"日本語",
+  d1:"1D",w1:"1W",w4:"1M",w13:"3M",w26:"6M",ytd:"YTD",w52:"1Y",r3M:"3M",r6M:"6M",r1Y:"1Y",r2Y:"2Y",r5Y:"5Y",r10Y:"10Y",rALL:"All",
+  cap:m=>m>=1e6?"$"+(m/1e6).toFixed(2)+"T":"$"+(m/1e3).toFixed(m>=1e5?0:1)+"B",updated:v=>`Updated ${v}`,open:"US market open",closed:"US market closed",stale:"Update delayed",
+  wApprox:"estimated from market caps",wQqq:(m,d)=>`QQQ holdings as of ${m}/${d}`,idxPrep:"Index data is being prepared",monthN:m=>MONS[m-1],idxAria:"Nasdaq 100 index candlestick chart",cl:"C",op:"O",hi:"H",lo:"L",high:"High",low:"Low",
+  idxName:"Nasdaq 100 index",latest:"Latest",closeOf:d=>`${d} close`,closeW:"Close",prevClose:"Prev. close",idxW:p=>`Index-weighted · ${p}`,nStocks:n=>`${n} stocks`,upDown:"Up / Down",upRatio:v=>`${v}% up`,best:"Top gainer",worst:"Top loser",
+  sum:"Total",sumEq:p=>` (= index-weighted · ${p})`,none:"None",push:"Lifted",drag:"Dragged",other:"Other",top10:"Top 10",top20s:"Top 20",rest:n=>`Other ${n}`,rankBelow:r=>`#${r} and below`,
+  ym:k=>{const[y,m]=k.split("-");return`${MONS[m-1]} ${y}`},rLoading:"Loading rank history…",rAria:"Rank history of the top 20 by market cap",up:"Up",down:"Down",flat:"Flat",rKeyNote:n=>`3+ places changed vs ${n} years ago (or listing)`,
+  rSel:(t,ym,f,c,ym2,m)=>`<b>${t}</b>　#${f} in ${ym} → #${c} now${m!=null?` (#${m} in ${ym2})`:""}`,rankOf:ym=>`Ranks, ${ym}`,newest:"latest",monthEnd:"month-end",rNote:"↑↓ show the change in rank from that month to now.",
+  close:"Close",mcap:"Market cap",idxWeight:"Index weight",contribP:p=>`Contribution (${p})`,startW:"Start weight",finviz:t=>`Open ${t} on finviz ↗`,showing:s=>`Showing ${s}`,
+  hintMap:"Area = index weight, colour = return. Tap for details",hintList:p=>`Sorted by ${p} return. Tap for details`,hintWeight:n=>`Index weight: ${n}. Tap for details`,loadFail:"Could not load the data. Check the connection and reopen in a while.",loadFailShort:"Loading failed"}};
+const tr=(k,...a)=>{const v=I18N[LANG][k]??I18N.ja[k];return typeof v==="function"?v(...a):v};
+const fmtTime=(d,o)=>new Intl.DateTimeFormat(LANG==="ja"?"ja-JP":"en-US",LANG==="ja"?{timeZone:"Asia/Tokyo",...o}:{hourCycle:"h23",...o}).format(d);
+function applyLang(){
+  document.documentElement.lang=LANG;
+  document.querySelectorAll("[data-i18n]").forEach(e=>{e.innerHTML=tr(e.dataset.i18n)});
+  const b=document.getElementById("lang");if(b)b.textContent=tr("switchTo");
+}
+const PERIODS=[["d1","d1"],["w1","w1"],["w4","w4"],["w13","w13"],["w26","w26"],["ytd","ytd"],["w52","w52"]];
+const PLABEL=new Proxy({},{get:(o,k)=>PERIODS.some(p=>p[0]===k)?tr(k):undefined});
 const CLAMP={d1:3,w1:8,w4:12,w13:20,w26:30,ytd:50,w52:60};
 const SEC_JA={"Technology":"テクノロジー","Consumer Defensive":"生活必需品","Consumer Cyclical":"一般消費財","Communication Services":"通信サービス","Healthcare":"ヘルスケア","Industrials":"資本財","Basic Materials":"素材","Financial":"金融","Energy":"エネルギー","Utilities":"公益","Real Estate":"不動産"};
-const secJa=s=>SEC_JA[s]||s;
+const secJa=s=>LANG==="ja"?SEC_JA[s]||s:s;
 
 let DATA=null, STOCKS=[], BY={}, CAPTOTAL=0, SECTORS=[], SWC={};
 const store={get(k,d){try{const v=localStorage.getItem("ndxhm."+k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem("ndxhm."+k,v)}catch(e){}}};
@@ -346,7 +382,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const val=(t,p=state.period)=>{const v=DATA&&DATA.perf[p]&&DATA.perf[p][t];return typeof v==="number"?v:null};
 function fmt(v,d){if(v==null)return"—";const a=Math.abs(v);const dd=d!=null?d:(a>=100?0:a>=10?1:2);return(v>0?"+":v<0?"−":"±")+a.toFixed(dd)+"%"}
-function fmtCap(m){return m>=1e6?(m/1e6).toFixed(2)+"兆ドル":Math.round(m/100).toLocaleString()+"億ドル"}
+function fmtCap(m){return tr("cap",m)}
 
 function setData(d){
   DATA=d;
@@ -381,11 +417,11 @@ function marketOpen(date=new Date()){const p=nyParts(date);return !["Sat","Sun"]
 function renderStatus(){
   if(!DATA){return}
   const d=new Date(DATA.updatedAt);
-  const t=new Intl.DateTimeFormat("ja-JP",{timeZone:"Asia/Tokyo",month:"numeric",day:"numeric",weekday:"short",hour:"2-digit",minute:"2-digit"}).format(d);
+  const tm=fmtTime(d,{month:"numeric",day:"numeric",weekday:"short",hour:"2-digit",minute:"2-digit"});
   const open=marketOpen();
   const ageMin=(Date.now()-d.getTime())/6e4;
   const stale=open?ageMin>45:ageMin>4*1440;
-  $("status").innerHTML=`<span>更新 ${esc(t)}</span><span class="pill ${open?"open":""}"><i></i>${open?"米国市場 取引中":"米国市場 時間外"}</span>${stale?`<span class="pill warn">更新が遅れています</span>`:""}`;
+  $("status").innerHTML=`<span>${esc(tr("updated",tm))}</span><span class="pill ${open?"open":""}"><i></i>${open?tr("open"):tr("closed")}</span>${stale?`<span class="pill warn">${tr("stale")}</span>`:""}`;
 }
 
 let C={};
@@ -414,18 +450,18 @@ function startW(p=state.period){
 }
 const contrib=(t,p=state.period)=>{const w=startW(p)[t],v=val(t,p);return w==null||v==null?null:w/100*v};
 function wret(list,p=state.period){const m=startW(p);let s=0,w=0;list.forEach(x=>{const v=val(x.t,p);if(v!=null&&m[x.t]!=null){s+=m[x.t]*v;w+=m[x.t]}});return w?s/w:null}
-function weightNote(){const w=DATA&&DATA.weights;if(!w||!w.asOf)return"時価総額ベースの概算";const [y,m,dd]=w.asOf.split("-");return`QQQの保有比率（${+m}/${+dd}時点）`}
+function weightNote(){const w=DATA&&DATA.weights;if(!w||!w.asOf)return tr("wApprox");const [y,m,dd]=w.asOf.split("-");return tr("wQqq",+m,+dd)}
 const cls=v=>v>0?"pos":v<0?"neg":"";
 
 function renderControls(){
-  $("periods").innerHTML=PERIODS.map(([k,l])=>`<button type="button" data-p="${k}" aria-pressed="${k===state.period}">${l}</button>`).join("");
+  $("periods").innerHTML=PERIODS.map(([k,l])=>`<button type="button" data-p="${k}" aria-pressed="${k===state.period}">${tr(l)}</button>`).join("");
   document.querySelectorAll("#views button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===state.view));
   document.querySelectorAll("#wscope button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.w===state.wscope));
   document.querySelectorAll("#rrange button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.rr===state.rrange));
 }
 /* ---------- index candle chart (map view) ---------- */
 let IDX=null;   // {daily:[[yyyymmdd,o,h,l,c],...], today:[...]}
-const IRANGES={d:[["3M","3ヶ月",63],["6M","6ヶ月",126],["1Y","1年",252],["2Y","2年",504]],w:[["1Y","1年",52],["2Y","2年",104],["5Y","5年",260],["ALL","全期間",0]],m:[["5Y","5年",60],["10Y","10年",120],["ALL","全期間",0]]};
+const IRANGES={d:[["3M","r3M",63],["6M","r6M",126],["1Y","r1Y",252],["2Y","r2Y",504]],w:[["1Y","r1Y",52],["2Y","r2Y",104],["5Y","r5Y",260],["ALL","rALL",0]],m:[["5Y","r5Y",60],["10Y","r10Y",120],["ALL","rALL",0]]};
 function idxDays(){
   if(!IDX||!Array.isArray(IDX.daily))return[];
   const rows=[...IDX.daily];const t=IDX.today, q=DATA&&DATA.index;
@@ -453,11 +489,11 @@ function renderIdx(){
   box.hidden=state.view!=="map"||!!state.zoom;
   document.querySelectorAll("#itf button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.itf===state.itf));
   document.querySelectorAll("#isc button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.isc===state.isc));
-  $("irange").innerHTML=IRANGES[state.itf].map(([k,l])=>`<button type="button" data-ir="${k}" aria-pressed="${k===state.irange[state.itf]}">${l}</button>`).join("");
+  $("irange").innerHTML=IRANGES[state.itf].map(([k,l])=>`<button type="button" data-ir="${k}" aria-pressed="${k===state.irange[state.itf]}">${tr(l)}</button>`).join("");
   if(box.hidden)return;
   const all=idxBars(state.itf), r=IRANGES[state.itf].find(x=>x[0]===state.irange[state.itf])||IRANGES[state.itf][0];
   const B=r[2]?all.slice(-r[2]):all;
-  if(!B.length){el.innerHTML=`<div class="empty" style="padding:30px 10px">指数のデータを準備中です</div>`;$("iread").innerHTML="";el._geo=null;return}
+  if(!B.length){el.innerHTML=`<div class="empty" style="padding:30px 10px">${tr("idxPrep")}</div>`;$("iread").innerHTML="";el._geo=null;return}
   const W=Math.max(300,el.clientWidth), narrow=W<560, H=narrow?Math.round(W*.8):380;
   const ML=6,MR=54,MT=8,MB=22, PW=W-ML-MR, PH=H-MT-MB, n=B.length, band=PW/n, bw=Math.max(1,Math.min(14,band*.7)), x=i=>ML+band*(i+.5);
   const lo=d3.min(B,b=>b.l), hi=d3.max(B,b=>b.h), log=state.isc==="log";
@@ -466,18 +502,18 @@ function renderIdx(){
   const tk=v=>Math.round(v).toLocaleString("en-US");
   let g="";(log?idxLogTicks(y.domain()):y.ticks(5)).forEach(v=>{g+=`<line class="grid" x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}"/><text class="ax" x="${ML+PW+6}" y="${y(v)+4}">${tk(v)}</text>`});
   let lastLab="";const span=(B[n-1].t-B[0].t)/864e5;
-  B.forEach((b,i)=>{const lab=span>800?b.d.slice(0,4):b.d.slice(0,7);if(lab!==lastLab){const show=span>800?(+lab%(span>3000?2:1)===0):(+b.d.slice(5,7)%(span>300?3:1)===0);if(show&&i>0)g+=`<line class="grid" x1="${x(i)}" x2="${x(i)}" y1="${MT}" y2="${MT+PH}" opacity=".5"/><text class="ax" x="${x(i)}" y="${H-6}" text-anchor="middle">${span>800?"’"+lab.slice(2):(+lab.slice(5)===1?lab.slice(2,4)+"/1":+lab.slice(5)+"月")}</text>`}lastLab=lab});
+  B.forEach((b,i)=>{const lab=span>800?b.d.slice(0,4):b.d.slice(0,7);if(lab!==lastLab){const show=span>800?(+lab%(span>3000?2:1)===0):(+b.d.slice(5,7)%(span>300?3:1)===0);if(show&&i>0)g+=`<line class="grid" x1="${x(i)}" x2="${x(i)}" y1="${MT}" y2="${MT+PH}" opacity=".5"/><text class="ax" x="${x(i)}" y="${H-6}" text-anchor="middle">${span>800?"’"+lab.slice(2):(+lab.slice(5)===1?lab.slice(2,4)+"/1":tr("monthN",+lab.slice(5)))}</text>`}lastLab=lab});
   let c="";B.forEach((b,i)=>{const col=b.c>=b.o?C.up:C.down, xc=x(i).toFixed(1);
     c+=`<line x1="${xc}" x2="${xc}" y1="${y(b.h).toFixed(1)}" y2="${y(b.l).toFixed(1)}" stroke="${col}" stroke-width="1"/>`;
     const y1=y(Math.max(b.o,b.c)),y2=y(Math.min(b.o,b.c));c+=`<rect x="${(x(i)-bw/2).toFixed(1)}" y="${y1.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,y2-y1).toFixed(1)}" fill="${col}"/>`});
   const ci=state.ici!=null&&state.ici<n?state.ici:null;
   const xh=ci!=null?`<line class="xh" x1="${x(ci)}" x2="${x(ci)}" y1="${MT}" y2="${MT+PH}"/>`:"";
-  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="ナスダック100指数のローソク足チャート">${g}${c}${xh}<rect class="ihit" x="${ML}" y="${MT}" width="${PW}" height="${PH}" fill="transparent"/></svg>`;
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${tr("idxAria")}">${g}${c}${xh}<rect class="ihit" x="${ML}" y="${MT}" width="${PW}" height="${PH}" fill="transparent"/></svg>`;
   el._geo={ML,PW,n};
   const b=B[ci!=null?ci:n-1], f=v=>v.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
   const lbl=state.itf==="d"?b.d:state.itf==="w"?`${b.d}〜${b.last.slice(5)}`:b.d.slice(0,7);
   // always two rows, so the chart below never shifts
-  $("iread").innerHTML=`<div class="rrow"><b>${lbl}</b><span>終 <b>${f(b.c)}</b></span></div><div class="rrow"><span>始 ${f(b.o)}</span><span>高 ${f(b.h)}</span><span>安 ${f(b.l)}</span></div>`;
+  $("iread").innerHTML=`<div class="rrow"><b>${lbl}</b><span>${tr("cl")} <b>${f(b.c)}</b></span></div><div class="rrow"><span>${tr("op")} ${f(b.o)}</span><span>${tr("hi")} ${f(b.h)}</span><span>${tr("lo")} ${f(b.l)}</span></div>`;
 }
 // the Nasdaq-100 index level, like the price at the top of the TQQQ app
 function renderPrice(){
@@ -489,8 +525,8 @@ function renderPrice(){
   const m=String(q.time||"").match(/([A-Z][a-z]{2}) (\d{1,2}), (\d{4})/);
   const day=m?`${"JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(m[1])/3+1}/${+m[2]}`:"";
   el.hidden=false;
-  el.innerHTML=`<div class="p">${n(q.price)}</div><div class="pside">${d==null?"":`<div class="chg ${cls(r*100)}">${d>=0?"+":"−"}${n(Math.abs(d))}（${fmt(r*100,2)}）</div>`}${hl?`<div class="dhl"><span>高値 <b>${n(q.high)}</b></span><span>安値 <b>${n(q.low)}</b></span></div>`:""}</div>
-   <div class="meta">ナスダック100指数 · ${live?"最新値":day?`${day}の終値`:"終値"}${q.prev?` · 前日終値 ${n(q.prev)}`:""}</div>`;
+  el.innerHTML=`<div class="p">${n(q.price)}</div><div class="pside">${d==null?"":`<div class="chg ${cls(r*100)}">${d>=0?"+":"−"}${n(Math.abs(d))}（${fmt(r*100,2)}）</div>`}${hl?`<div class="dhl"><span>${tr("high")} <b>${n(q.high)}</b></span><span>${tr("low")} <b>${n(q.low)}</b></span></div>`:""}</div>
+   <div class="meta">${tr("idxName")} · ${live?tr("latest"):day?tr("closeOf",day):tr("closeW")}${q.prev?` · ${tr("prevClose")} ${n(q.prev)}`:""}</div>`;
 }
 function renderSummary(){
   const all=STOCKS.filter(s=>val(s.t)!=null);
@@ -500,20 +536,20 @@ function renderSummary(){
   const sorted=[...all].sort((a,b)=>val(b.t)-val(a.t));
   const best=sorted[0], worst=sorted[sorted.length-1];
   $("summary").innerHTML=`
-   <div class="stat"><div class="lab">指数加重・${PLABEL[state.period]}</div><div class="val ${cls(r)}">${fmt(r,2)}</div><div class="sub">${all.length}銘柄</div></div>
-   <div class="stat"><div class="lab">上昇 / 下落</div><div class="val"><span class="pos">${up}</span><span style="color:var(--muted);font-weight:500"> / </span><span class="neg">${dn}</span></div><div class="sub">上昇比率 ${Math.round(up/all.length*100)}%</div></div>
-   <div class="stat"><div class="lab">最大上昇</div><div class="val ${cls(val(best.t))}">${fmt(val(best.t))}</div><div class="sub"><b class="num" style="font-size:14px">${best.t}</b> ${esc(best.name)}</div></div>
-   <div class="stat"><div class="lab">最大下落</div><div class="val ${cls(val(worst.t))}">${fmt(val(worst.t))}</div><div class="sub"><b class="num" style="font-size:14px">${worst.t}</b> ${esc(worst.name)}</div></div>`;
+   <div class="stat"><div class="lab">${tr("idxW",PLABEL[state.period])}</div><div class="val ${cls(r)}">${fmt(r,2)}</div><div class="sub">${tr("nStocks",all.length)}</div></div>
+   <div class="stat"><div class="lab">${tr("upDown")}</div><div class="val"><span class="pos">${up}</span><span style="color:var(--muted);font-weight:500"> / </span><span class="neg">${dn}</span></div><div class="sub">${tr("upRatio",Math.round(up/all.length*100))}</div></div>
+   <div class="stat"><div class="lab">${tr("best")}</div><div class="val ${cls(val(best.t))}">${fmt(val(best.t))}</div><div class="sub"><b class="num" style="font-size:14px">${best.t}</b> ${esc(best.name)}</div></div>
+   <div class="stat"><div class="lab">${tr("worst")}</div><div class="val ${cls(val(worst.t))}">${fmt(val(worst.t))}</div><div class="sub"><b class="num" style="font-size:14px">${worst.t}</b> ${esc(worst.name)}</div></div>`;
 }
 function renderContrib(){
   const rows=STOCKS.map(s=>({t:s.t,c:contrib(s.t)})).filter(r=>r.c!=null);
   const sum=rows.reduce((a,r)=>a+r.c,0);
-  $("csum").innerHTML=`合計 <b class="num ${cls(sum)}">${sum>0?"+":sum<0?"−":"±"}${Math.abs(sum).toFixed(2)}pt</b>（＝指数加重・${PLABEL[state.period]}）`;
+  $("csum").innerHTML=`${tr("sum")} <b class="num ${cls(sum)}">${sum>0?"+":sum<0?"−":"±"}${Math.abs(sum).toFixed(2)}pt</b>${tr("sumEq",PLABEL[state.period])}`;
   const pos=rows.filter(r=>r.c>0).sort((a,b)=>b.c-a.c).slice(0,5);
   const neg=rows.filter(r=>r.c<0).sort((a,b)=>a.c-b.c).slice(0,5);
   const mx=Math.max(...pos.map(r=>r.c),...neg.map(r=>-r.c),1e-9);
-  const col=(arr,title,c)=>`<div><h3>${title}</h3>${arr.length?arr.map(r=>`<div class="crow" data-t="${r.t}" role="button" tabindex="0"><span class="tk">${r.t}</span><span class="track"><span class="fill" style="width:${Math.max(2,Math.abs(r.c)/mx*100)}%;background:${c}"></span></span><span class="v num">${r.c>0?"+":"−"}${Math.abs(r.c).toFixed(2)}</span></div>`).join(""):`<div style="font-size:12px;color:var(--muted)">該当なし</div>`}</div>`;
-  $("contrib").innerHTML=col(pos,"押し上げ",C.up)+col(neg,"押し下げ",C.down);
+  const col=(arr,title,c)=>`<div><h3>${title}</h3>${arr.length?arr.map(r=>`<div class="crow" data-t="${r.t}" role="button" tabindex="0"><span class="tk">${r.t}</span><span class="track"><span class="fill" style="width:${Math.max(2,Math.abs(r.c)/mx*100)}%;background:${c}"></span></span><span class="v num">${r.c>0?"+":"−"}${Math.abs(r.c).toFixed(2)}</span></div>`).join(""):`<div style="font-size:12px;color:var(--muted)">${tr("none")}</div>`}</div>`;
+  $("contrib").innerHTML=col(pos,tr("push"),C.up)+col(neg,tr("drag"),C.down);
 }
 function renderSectors(){
   const secs=SECTORS.map(sec=>{const list=STOCKS.filter(s=>s.sec===sec);return{sec,w:list.reduce((a,s)=>a+s.w,0)/100,r:wret(list)}}).sort((a,b)=>(b.r??-1e9)-(a.r??-1e9));
@@ -566,7 +602,7 @@ function renderMap(){
   (root.children||[]).forEach(s=>{
     const other=s.data.name===OTHER, names=other?s.data.children.map(c=>c.name):[s.data.name];
     const r=wret(STOCKS.filter(x=>names.includes(x.sec)));
-    html+=`<div class="sec" style="left:${s.x0}px;top:${s.y0}px;width:${s.x1-s.x0}px;height:${s.y1-s.y0}px"><div class="sh"><span>${other?"その他":secJa(s.data.name)}</span><b class="${cls(r)}">${fmt(r,2)}</b></div></div>`;
+    html+=`<div class="sec" style="left:${s.x0}px;top:${s.y0}px;width:${s.x1-s.x0}px;height:${s.y1-s.y0}px"><div class="sh"><span>${other?tr("other"):secJa(s.data.name)}</span><b class="${cls(r)}">${fmt(r,2)}</b></div></div>`;
   });
   root.leaves().forEach(l=>{
     const t=l.data.t, w=l.x1-l.x0, h=l.y1-l.y0; if(!t||w<1||h<1)return;
@@ -595,14 +631,14 @@ function renderWeights(){
   const all=[...STOCKS].sort((a,b)=>b.w-a.w);
   const w=s=>s.w;
   const top10=all.slice(0,10).reduce((a,s)=>a+w(s),0), top20=all.slice(0,20).reduce((a,s)=>a+w(s),0);
-  $("wstats").innerHTML=`<div>上位10社<b>${top10.toFixed(2)}%</b></div><div>上位20社<b>${top20.toFixed(2)}%</b></div><div>残り${all.length-20}社<b>${(100-top20).toFixed(2)}%</b></div>`;
+  $("wstats").innerHTML=`<div>${tr("top10")}<b>${top10.toFixed(2)}%</b></div><div>${tr("top20s")}<b>${top20.toFixed(2)}%</b></div><div>${tr("rest",all.length-20)}<b>${(100-top20).toFixed(2)}%</b></div>`;
   let list=all.map((s,i)=>({s,rank:i+1}));
   if(state.zoom)list=list.filter(x=>x.s.sec===state.zoom);
   else if(state.wscope==="20")list=list.slice(0,20);
   const mx=Math.max(...list.map(x=>w(x.s)),1e-9);
   let html="";
   list.forEach((x,i)=>{
-    if(!state.zoom&&state.wscope==="all"&&(x.rank===11||x.rank===21))html+=`<div class="wsep">${x.rank}位以下</div>`;
+    if(!state.zoom&&state.wscope==="all"&&(x.rank===11||x.rank===21))html+=`<div class="wsep">${tr("rankBelow",x.rank)}</div>`;
     const v=val(x.s.t);
     html+=`<button type="button" class="wrow" data-t="${x.s.t}"><span class="rk num">${x.rank}</span><span class="tk">${x.s.t}<small>${esc(x.s.name)}</small></span><span class="wbar"><i style="width:${Math.max(1,w(x.s)/mx*100)}%;background:${color(v)}"></i></span><span class="w num">${w(x.s).toFixed(2)}%</span><span class="v num ${cls(v)}">${fmt(v)}</span></button>`;
   });
@@ -612,7 +648,7 @@ function renderWeights(){
 /* rank history */
 const nyMonth=iso=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit"}).format(new Date(iso)).slice(0,7);
 const nextMonth=k=>{let[y,m]=k.split("-").map(Number);m++;if(m>12){m=1;y++}return`${y}-${String(m).padStart(2,"0")}`};
-const jaMonth=k=>{const[y,m]=k.split("-");return`${y}年${+m}月`};
+const jaMonth=k=>tr("ym",k);
 // History months plus the current month, whose ranks come from the latest market caps.
 function rankSeries(){
   if(!RH||!RH.months||!DATA)return null;
@@ -628,7 +664,7 @@ function rankSeries(){
 }
 function renderRanks(){
   const box=$("rchart");const R=rankSeries();
-  if(!R){box.innerHTML=`<div class="empty" style="padding:40px 10px">順位の履歴を読み込んでいます…</div>`;$("rinfo").innerHTML="";$("rkey").innerHTML="";return}
+  if(!R){box.innerHTML=`<div class="empty" style="padding:40px 10px">${tr("rLoading")}</div>`;$("rinfo").innerHTML="";$("rkey").innerHTML="";return}
   const n=Math.min(R.months.length,+state.rrange*12+1), i0=R.months.length-n;
   const W=Math.max(300,box.clientWidth-8), narrow=W<560;
   const ML=24,MR=50,MT=8,MB=22, H=narrow?Math.round(Math.min(640,W*1.6)):560;
@@ -651,9 +687,9 @@ function renderRanks(){
   let xh="";if(mi!==R.cur){xh=`<line class="xh" x1="${x(mi)}" x2="${x(mi)}" y1="${MT}" y2="${MT+PH}"/>`}
   if(state.rsel&&R.ser[state.rsel]){const r=R.ser[state.rsel][mi];if(r!=null&&r<=MAXR)xh+=`<circle class="dot" cx="${x(mi)}" cy="${y(r)}" r="4.5"/>`}
   box.classList.toggle("has-sel",!!state.rsel);
-  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="時価総額上位20社の順位推移"><defs><clipPath id="rclip"><rect x="0" y="0" width="${W}" height="${y(MAXR+.5)}"/></clipPath></defs>${g}<g clip-path="url(#rclip)">${lines}</g>${labels}${xh}<rect id="rhit" x="${ML}" y="${MT}" width="${PW}" height="${PH}" fill="transparent"/></svg>`;
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${tr("rAria")}"><defs><clipPath id="rclip"><rect x="0" y="0" width="${W}" height="${y(MAXR+.5)}"/></clipPath></defs>${g}<g clip-path="url(#rclip)">${lines}</g>${labels}${xh}<rect id="rhit" x="${ML}" y="${MT}" width="${PW}" height="${PH}" fill="transparent"/></svg>`;
   box._geo={i0,n,ML,PW};
-  $("rkey").innerHTML=`<span><i style="background:${C.up}"></i>上昇</span><span><i style="background:${C.down}"></i>下落</span><span><i style="background:${C.flat}"></i>横ばい</span><span>${state.rrange}年前（上場時）と比べて3位以上の変化</span>`;
+  $("rkey").innerHTML=`<span><i style="background:${C.up}"></i>${tr("up")}</span><span><i style="background:${C.down}"></i>${tr("down")}</span><span><i style="background:${C.flat}"></i>${tr("flat")}</span><span>${tr("rKeyNote",state.rrange)}</span>`;
   renderRankInfo(R,mi,i0);
 }
 function renderRankInfo(R,mi,i0){
@@ -661,9 +697,9 @@ function renderRankInfo(R,mi,i0){
   const rows=R.top.map(t=>({t,r:R.ser[t][mi]})).sort((a,b)=>(a.r??999)-(b.r??999));
   let sel="";
   if(state.rsel&&R.ser[state.rsel]){const a=R.ser[state.rsel];let f=null,fi=null;for(let i=i0;i<a.length;i++)if(a[i]!=null){f=a[i];fi=i;break}
-    sel=`<p class="rsel"><b>${state.rsel}</b>　${jaMonth(R.months[fi])} ${f}位 → 現在 ${a[R.cur]}位${a[mi]!=null&&mi!==R.cur?`（${jaMonth(k)}は${a[mi]}位）`:""}</p>`}
-  $("rinfo").innerHTML=`${sel}<h3>${jaMonth(k)}の順位<span>${mi===R.cur?"最新":"月末"}</span></h3><div class="rgrid">${rows.map(x=>{const now=R.ser[x.t][R.cur];const d=x.r==null?null:x.r-now;
-    return `<button type="button" class="rchip" data-rk="${x.t}" aria-pressed="${x.t===state.rsel}"><span class="r">${x.r==null?"—":x.r}</span><span class="t">${x.t}</span>${mi!==R.cur&&d?`<span class="d ${d>0?"pos":"neg"}">${d>0?"↑":"↓"}${Math.abs(d)}</span>`:""}</button>`}).join("")}</div>${mi!==R.cur?`<p class="wnote">↑↓は、その月から現在までの順位の変化です。</p>`:""}`;
+    sel=`<p class="rsel">${tr("rSel",state.rsel,jaMonth(R.months[fi]),f,a[R.cur],jaMonth(k),a[mi]!=null&&mi!==R.cur?a[mi]:null)}</p>`}
+  $("rinfo").innerHTML=`${sel}<h3>${tr("rankOf",jaMonth(k))}<span>${mi===R.cur?tr("newest"):tr("monthEnd")}</span></h3><div class="rgrid">${rows.map(x=>{const now=R.ser[x.t][R.cur];const d=x.r==null?null:x.r-now;
+    return `<button type="button" class="rchip" data-rk="${x.t}" aria-pressed="${x.t===state.rsel}"><span class="r">${x.r==null?"—":x.r}</span><span class="t">${x.t}</span>${mi!==R.cur&&d?`<span class="d ${d>0?"pos":"neg"}">${d>0?"↑":"↓"}${Math.abs(d)}</span>`:""}</button>`}).join("")}</div>${mi!==R.cur?`<p class="wnote">${tr("rNote")}</p>`:""}`;
 }
 function rankMonthAt(clientX){
   const box=$("rchart"),g=box._geo,svg=box.querySelector("svg");if(!g||!svg)return null;
@@ -675,12 +711,12 @@ function renderDetail(){
   const d=$("detail");
   if(!state.sel||!BY[state.sel]){d.hidden=true;return}
   const s=BY[state.sel];
-  const chips=PERIODS.map(([k,l])=>{const v=val(s.t,k);const bg=colorAt(v,k);return `<div class="pc${k===state.period?" cur":""}" style="background:${bg};color:${inkOn(bg)}"><div class="l">${l}</div><div class="n">${fmt(v,v!=null&&Math.abs(v)>=100?0:1)}</div></div>`}).join("");
+  const chips=PERIODS.map(([k,l])=>{const v=val(s.t,k);const bg=colorAt(v,k);return `<div class="pc${k===state.period?" cur":""}" style="background:${bg};color:${inkOn(bg)}"><div class="l">${tr(l)}</div><div class="n">${fmt(v,v!=null&&Math.abs(v)>=100?0:1)}</div></div>`}).join("");
   const cv=contrib(s.t), sw=startW()[s.t];
-  d.innerHTML=`<div class="dhead"><div><div class="dtk">${s.t}</div><div class="dname">${esc(s.name)}</div><div class="dmeta">${secJa(s.sec)} · ${esc(s.ind)}</div></div><button type="button" class="x" id="close">閉じる</button></div>
-   <div class="dfacts"><span>時価総額<b>${fmtCap(s.cap)}</b></span><span>指数ウェイト<b>${s.w.toFixed(2)}%</b></span><span>寄与（${PLABEL[state.period]}）<b>${cv==null?"—":(cv>0?"+":"−")+Math.abs(cv).toFixed(2)+"pt"}</b><small>期初ウェイト ${sw==null?"—":sw.toFixed(2)+"%"} × ${fmt(val(s.t))}</small></span></div>
+  d.innerHTML=`<div class="dhead"><div><div class="dtk">${s.t}</div><div class="dname">${esc(s.name)}</div><div class="dmeta">${secJa(s.sec)} · ${esc(s.ind)}</div></div><button type="button" class="x" id="close">${tr("close")}</button></div>
+   <div class="dfacts"><span>${tr("mcap")}<b>${fmtCap(s.cap)}</b></span><span>${tr("idxWeight")}<b>${s.w.toFixed(2)}%</b></span><span>${tr("contribP",PLABEL[state.period])}<b>${cv==null?"—":(cv>0?"+":"−")+Math.abs(cv).toFixed(2)+"pt"}</b><small>${tr("startW")} ${sw==null?"—":sw.toFixed(2)+"%"} × ${fmt(val(s.t))}</small></span></div>
    <div class="pgrid">${chips}</div>
-   <a class="dlink" href="https://finviz.com/quote.ashx?t=${encodeURIComponent(s.t)}" target="_blank" rel="noopener noreferrer">finvizで${s.t}を開く ↗</a>`;
+   <a class="dlink" href="https://finviz.com/quote.ashx?t=${encodeURIComponent(s.t)}" target="_blank" rel="noopener noreferrer">${tr("finviz",s.t)}</a>`;
   d.hidden=false;
   $("close").onclick=()=>{state.sel=null;renderMapOrList();renderDetail()};
 }
@@ -690,7 +726,7 @@ function renderMapOrList(){
   $("cols").hidden=v==="weight";  // contributions and sectors belong to the map and ranking views
   $("back").hidden=!state.zoom;
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
-  $("hint").textContent=state.zoom?`${secJa(state.zoom)}を表示中`:({map:"面積＝指数ウェイト、色＝騰落率。タップで詳細",list:`${PLABEL[state.period]}の騰落率順。タップで詳細`,weight:`指数ウェイト：${weightNote()}。タップで詳細`})[v];
+  $("hint").textContent=state.zoom?tr("showing",secJa(state.zoom)):({map:tr("hintMap"),list:tr("hintList",PLABEL[state.period]),weight:tr("hintWeight",weightNote())})[v];
   renderIdx();
   if(v==="map")renderMap();else if(v==="list")renderList();else if(v==="weight"){renderWeights();if(!state.zoom)renderRanks()}
 }
@@ -708,7 +744,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v22";
+const APP_VER="ndx-heatmap-v23";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
@@ -728,7 +764,7 @@ async function load(manual){
     if(!DATA||d.updatedAt!==DATA.updatedAt||manual){setData(d);renderAll()}
     else renderStatus();
   }catch(e){
-    if(!DATA){$("empty").textContent="データを読み込めませんでした。通信状況を確認して、しばらくしてから開き直してください。";$("status").textContent="読み込みに失敗しました"}
+    if(!DATA){$("empty").textContent=tr("loadFail");$("status").textContent=tr("loadFailShort")}
     else renderStatus();
   }finally{loading=false}
 }
@@ -805,6 +841,8 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 setInterval(()=>{if(document.visibilityState==="visible")load(false)},60*1000);
 setInterval(()=>{if(DATA)renderStatus()},60*1000);
 
+$("lang").addEventListener("click",()=>{LANG=LANG==="ja"?"en":"ja";try{localStorage.setItem("lang",LANG)}catch(e){}applyLang();renderAll()});
+applyLang();
 renderAll();
 load(false);
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
