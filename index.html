@@ -357,7 +357,8 @@ const I18N={
   close:"Close",mcap:"Market cap",idxWeight:"Index weight",contribP:p=>`Contribution (${p})`,startW:"Start weight",finviz:t=>`Open ${t} on finviz ↗`,showing:s=>`Showing ${s}`,
   hintMap:"Area = index weight, colour = return. Tap for details",hintList:p=>`Sorted by ${p} return. Tap for details`,hintWeight:n=>`Index weight: ${n}. Tap for details`,loadFail:"Could not load the data. Check the connection and reopen in a while.",loadFailShort:"Loading failed"}};
 const tr=(k,...a)=>{const v=I18N[LANG][k]??I18N.ja[k];return typeof v==="function"?v(...a):v};
-const fmtTime=(d,o)=>new Intl.DateTimeFormat(LANG==="ja"?"ja-JP":"en-US",LANG==="ja"?{timeZone:"Asia/Tokyo",...o}:{hourCycle:"h23",...o}).format(d);
+// times: Japanese in Japan time; English in New York time (the market's), marked ET
+const fmtTime=(d,o)=>LANG==="ja"?new Intl.DateTimeFormat("ja-JP",{timeZone:"Asia/Tokyo",...o}).format(d):new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hourCycle:"h23",...o}).format(d)+" ET";
 function applyLang(){
   document.documentElement.lang=LANG;
   document.querySelectorAll("[data-i18n]").forEach(e=>{e.innerHTML=tr(e.dataset.i18n)});
@@ -745,7 +746,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v24";
+const APP_VER="ndx-heatmap-v25";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
