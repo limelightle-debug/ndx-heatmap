@@ -39,7 +39,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .avatar{width:42px;height:42px;border-radius:10px;flex:none;box-shadow:0 0 0 1px var(--line)}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 [hidden]{display:none!important}
-body[data-view="chart"] .mapbox,body[data-view="weight"] #periods,body[data-view="weight"] #price,body[data-view="list"] #price,body[data-view="weight"] #hint,body[data-view="weight"] .maphead .legend{display:none}
+body[data-view="chart"] .mapbox,body[data-view="weight"] #periods,body[data-view="weight"] #price,body[data-view="list"] #price,body[data-view="weight"] #hint,body[data-view="weight"] .maphead .legend,body[data-view="list"] #hint,body[data-view="list"] .maphead .legend{display:none}
 
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding-block:12px 10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
 .titlerow{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -343,7 +343,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 let LANG=(()=>{try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
 const MONS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const I18N={
- ja:{loading:"読み込み中…",loadingData:"データを読み込んでいます…",vMap:"ヒートマップ",vList:"騰落率",vWeight:"指数構成銘柄比率",vChart:"チャート",back:"← 全体に戻る",wTitle:"ナスダック100 指数構成銘柄比率",top20:"トップ20",allStocks:"全銘柄",rTitle:"時価総額の順位推移（月末）",y10:"10年",y5:"5年",y3:"3年",
+ ja:{loading:"読み込み中…",loadingData:"データを読み込んでいます…",vMap:"ヒートマップ",vList:"騰落率",vWeight:"指数構成銘柄比率",vChart:"チャート",lTitle:"騰落率ランキング",lPeriod:p=>`期間：${p}`,back:"← 全体に戻る",wTitle:"ナスダック100 指数構成銘柄比率",top20:"トップ20",allStocks:"全銘柄",rTitle:"時価総額の順位推移（月末）",y10:"10年",y5:"5年",y3:"3年",
   tfD:"日足",tfW:"週足",tfM:"月足",scLin:"通常",scLog:"対数",idxTitle:"ナスダック100指数",candles:"ローソク足",contribTitle:"指数への寄与",contribSub:"期初ウェイト×騰落率（%pt）",secTitle:"セクター",secSub:"タップでマップを絞り込み",lab:"恐怖指数研究所",openTqqq:"TQQQ を開く",switchTo:"EN",
   d1:"1日",w1:"1週",w4:"1ヶ月",w13:"3ヶ月",w26:"6ヶ月",ytd:"年初来",w52:"1年",r3M:"3ヶ月",r6M:"6ヶ月",r1Y:"1年",r2Y:"2年",r5Y:"5年",r10Y:"10年",rALL:"全期間",
   cap:m=>m>=1e6?(m/1e6).toFixed(2)+"兆ドル":Math.round(m/100).toLocaleString()+"億ドル",updated:v=>`更新 ${v}`,open:"米国市場 取引中",closed:"米国市場 時間外",stale:"更新が遅れています",
@@ -354,7 +354,7 @@ const I18N={
   rSel:(t,ym,f,c,ym2,m)=>`<b>${t}</b>　${ym} ${f}位 → 現在 ${c}位${m!=null?`（${ym2}は${m}位）`:""}`,rankOf:ym=>`${ym}の順位`,newest:"最新",monthEnd:"月末",rNote:"↑↓は、その月から現在までの順位の変化です。",
   close:"閉じる",mcap:"時価総額",idxWeight:"指数ウェイト",contribP:p=>`寄与（${p}）`,startW:"期初ウェイト",finviz:t=>`finvizで${t}を開く ↗`,showing:s=>`${s}を表示中`,
   hintMap:"面積＝指数ウェイト、色＝騰落率。タップで詳細",hintList:p=>`${p}の騰落率順。タップで詳細`,hintWeight:n=>`指数ウェイト：${n}。タップで詳細`,loadFail:"データを読み込めませんでした。通信状況を確認して、しばらくしてから開き直してください。",loadFailShort:"読み込みに失敗しました"},
- en:{loading:"Loading…",loadingData:"Loading data…",vMap:"Heatmap",vList:"Returns",vWeight:"Index weights",vChart:"Chart",back:"← Back to all",wTitle:"Nasdaq 100 index weights",top20:"Top 20",allStocks:"All",rTitle:"Market-cap rank history (month-end)",y10:"10Y",y5:"5Y",y3:"3Y",
+ en:{loading:"Loading…",loadingData:"Loading data…",vMap:"Heatmap",vList:"Returns",vWeight:"Index weights",vChart:"Chart",lTitle:"Return ranking",lPeriod:p=>`Period: ${p}`,back:"← Back to all",wTitle:"Nasdaq 100 index weights",top20:"Top 20",allStocks:"All",rTitle:"Market-cap rank history (month-end)",y10:"10Y",y5:"5Y",y3:"3Y",
   tfD:"Daily",tfW:"Weekly",tfM:"Monthly",scLin:"Linear",scLog:"Log",idxTitle:"Nasdaq 100 index",candles:"Candles",contribTitle:"Contribution to the index",contribSub:"Start weight × return (pt)",secTitle:"Sectors",secSub:"Tap to filter the map",lab:"Fear Index Research Institute",openTqqq:"Open TQQQ",switchTo:"日本語",
   d1:"1D",w1:"1W",w4:"1M",w13:"3M",w26:"6M",ytd:"YTD",w52:"1Y",r3M:"3M",r6M:"6M",r1Y:"1Y",r2Y:"2Y",r5Y:"5Y",r10Y:"10Y",rALL:"All",
   cap:m=>m>=1e6?"$"+(m/1e6).toFixed(2)+"T":"$"+(m/1e3).toFixed(m>=1e5?0:1)+"B",updated:v=>`Updated ${v}`,open:"US market open",closed:"US market closed",stale:"Update delayed",
@@ -648,7 +648,8 @@ function renderMap(){
 function renderList(){
   const list=STOCKS.filter(s=>!state.zoom||s.sec===state.zoom).sort((a,b)=>(val(b.t)??-1e9)-(val(a.t)??-1e9));
   const mx=Math.max(...list.map(s=>Math.abs(val(s.t)||0)),1e-9);
-  $("list").innerHTML=list.map((s,i)=>{
+  // a title, with the period the returns cover
+  $("list").innerHTML=`<div class="wtitle"><b>${tr("lTitle")}</b><span>${tr("lPeriod",PLABEL[state.period])}</span></div>`+list.map((s,i)=>{
     const v=val(s.t);const pct=Math.abs(v||0)/mx*50;
     const bar=v==null?"":v>=0?`left:50%;width:${pct}%;background:${C.up};border-radius:0 3px 3px 0`:`right:50%;width:${pct}%;background:${C.down};border-radius:3px 0 0 3px`;
     return `<button type="button" class="row" data-t="${s.t}"><span class="rk num">${i+1}</span><span class="tk">${s.t}</span><span class="nm"><div>${esc(s.name)}</div><small>${secJa(s.sec)} · ${fmtCap(s.cap)}</small></span><span class="dbar bc"><i style="${bar}"></i></span><span class="v num ${cls(v)}">${fmt(v)}</span></button>`}).join("");
@@ -773,7 +774,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v41";
+const APP_VER="ndx-heatmap-v42";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
