@@ -39,6 +39,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .avatar{width:42px;height:42px;border-radius:10px;flex:none;box-shadow:0 0 0 1px var(--line)}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 [hidden]{display:none!important}
+body[data-view="weight"] #price,body[data-view="weight"] #hint,body[data-view="weight"] .maphead .legend{display:none}
 
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding-block:12px 10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
 .titlerow{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -727,6 +728,7 @@ function renderMapOrList(){
   const v=state.view;
   $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="weight"||!!state.zoom;
   $("cols").hidden=v==="weight";  // contributions and sectors belong to the map and ranking views
+  document.body.dataset.view=v;  // the weights view shows the weights alone (no price block, no hint)
   $("summary").hidden=v==="weight";  // the day's breadth panel has no place among the weights
   $("back").hidden=!state.zoom;
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
@@ -748,7 +750,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v29";
+const APP_VER="ndx-heatmap-v30";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
