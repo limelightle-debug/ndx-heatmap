@@ -251,7 +251,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
       <div class="seg" id="views" role="group" aria-label="表示">
         <button type="button" data-v="map" data-i18n="vMap">ヒートマップ</button>
         <button type="button" data-v="list" data-i18n="vList">騰落率</button>
-        <button type="button" data-v="weight" data-i18n="vWeight">指数組入比率</button>
+        <button type="button" data-v="weight" data-i18n="vWeight">指数構成銘柄比率</button>
       </div>
     </div>
   </div>
@@ -336,7 +336,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 let LANG=(()=>{try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
 const MONS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const I18N={
- ja:{loading:"読み込み中…",loadingData:"データを読み込んでいます…",vMap:"ヒートマップ",vList:"騰落率",vWeight:"指数組入比率",back:"← 全体に戻る",wTitle:"ナスダック100 指数構成銘柄比率",top20:"トップ20",allStocks:"全銘柄",rTitle:"時価総額の順位推移（月末）",y10:"10年",y5:"5年",y3:"3年",
+ ja:{loading:"読み込み中…",loadingData:"データを読み込んでいます…",vMap:"ヒートマップ",vList:"騰落率",vWeight:"指数構成銘柄比率",back:"← 全体に戻る",wTitle:"ナスダック100 指数構成銘柄比率",top20:"トップ20",allStocks:"全銘柄",rTitle:"時価総額の順位推移（月末）",y10:"10年",y5:"5年",y3:"3年",
   tfD:"日足",tfW:"週足",tfM:"月足",scLin:"通常",scLog:"対数",idxTitle:"ナスダック100指数",candles:"ローソク足",contribTitle:"指数への寄与",contribSub:"期初ウェイト×騰落率（%pt）",secTitle:"セクター",secSub:"タップでマップを絞り込み",lab:"恐怖指数研究所",openTqqq:"TQQQ を開く",switchTo:"EN",
   d1:"1日",w1:"1週",w4:"1ヶ月",w13:"3ヶ月",w26:"6ヶ月",ytd:"年初来",w52:"1年",r3M:"3ヶ月",r6M:"6ヶ月",r1Y:"1年",r2Y:"2年",r5Y:"5年",r10Y:"10年",rALL:"全期間",
   cap:m=>m>=1e6?(m/1e6).toFixed(2)+"兆ドル":Math.round(m/100).toLocaleString()+"億ドル",updated:v=>`更新 ${v}`,open:"米国市場 取引中",closed:"米国市場 時間外",stale:"更新が遅れています",
@@ -750,7 +750,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v30";
+const APP_VER="ndx-heatmap-v31";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
