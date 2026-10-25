@@ -39,7 +39,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .avatar{width:42px;height:42px;border-radius:10px;flex:none;box-shadow:0 0 0 1px var(--line)}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 [hidden]{display:none!important}
-body[data-view="weight"] #periods,body[data-view="weight"] #price,body[data-view="weight"] #hint,body[data-view="weight"] .maphead .legend{display:none}
+body[data-view="chart"] .mapbox,body[data-view="weight"] #periods,body[data-view="weight"] #price,body[data-view="weight"] #hint,body[data-view="weight"] .maphead .legend{display:none}
 
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding-block:12px 10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
 .titlerow{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -256,6 +256,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
         <button type="button" data-v="map" data-i18n="vMap">ヒートマップ</button>
         <button type="button" data-v="list" data-i18n="vList">騰落率</button>
         <button type="button" data-v="weight" data-i18n="vWeight">指数構成銘柄比率</button>
+        <button type="button" data-v="chart" data-i18n="vChart">チャート</button>
       </div>
       <!-- under the tabs and fixed with them: the period applies to everything below, the index's change included -->
       <div class="seg" id="periods" role="group" aria-label="期間"></div>
@@ -342,7 +343,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 let LANG=(()=>{try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
 const MONS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const I18N={
- ja:{loading:"読み込み中…",loadingData:"データを読み込んでいます…",vMap:"ヒートマップ",vList:"騰落率",vWeight:"指数構成銘柄比率",back:"← 全体に戻る",wTitle:"ナスダック100 指数構成銘柄比率",top20:"トップ20",allStocks:"全銘柄",rTitle:"時価総額の順位推移（月末）",y10:"10年",y5:"5年",y3:"3年",
+ ja:{loading:"読み込み中…",loadingData:"データを読み込んでいます…",vMap:"ヒートマップ",vList:"騰落率",vWeight:"指数構成銘柄比率",vChart:"チャート",back:"← 全体に戻る",wTitle:"ナスダック100 指数構成銘柄比率",top20:"トップ20",allStocks:"全銘柄",rTitle:"時価総額の順位推移（月末）",y10:"10年",y5:"5年",y3:"3年",
   tfD:"日足",tfW:"週足",tfM:"月足",scLin:"通常",scLog:"対数",idxTitle:"ナスダック100指数",candles:"ローソク足",contribTitle:"指数への寄与",contribSub:"期初ウェイト×騰落率（%pt）",secTitle:"セクター",secSub:"タップでマップを絞り込み",lab:"恐怖指数研究所",openTqqq:"TQQQ を開く",switchTo:"EN",
   d1:"1日",w1:"1週",w4:"1ヶ月",w13:"3ヶ月",w26:"6ヶ月",ytd:"年初来",w52:"1年",r3M:"3ヶ月",r6M:"6ヶ月",r1Y:"1年",r2Y:"2年",r5Y:"5年",r10Y:"10年",rALL:"全期間",
   cap:m=>m>=1e6?(m/1e6).toFixed(2)+"兆ドル":Math.round(m/100).toLocaleString()+"億ドル",updated:v=>`更新 ${v}`,open:"米国市場 取引中",closed:"米国市場 時間外",stale:"更新が遅れています",
@@ -353,7 +354,7 @@ const I18N={
   rSel:(t,ym,f,c,ym2,m)=>`<b>${t}</b>　${ym} ${f}位 → 現在 ${c}位${m!=null?`（${ym2}は${m}位）`:""}`,rankOf:ym=>`${ym}の順位`,newest:"最新",monthEnd:"月末",rNote:"↑↓は、その月から現在までの順位の変化です。",
   close:"閉じる",mcap:"時価総額",idxWeight:"指数ウェイト",contribP:p=>`寄与（${p}）`,startW:"期初ウェイト",finviz:t=>`finvizで${t}を開く ↗`,showing:s=>`${s}を表示中`,
   hintMap:"面積＝指数ウェイト、色＝騰落率。タップで詳細",hintList:p=>`${p}の騰落率順。タップで詳細`,hintWeight:n=>`指数ウェイト：${n}。タップで詳細`,loadFail:"データを読み込めませんでした。通信状況を確認して、しばらくしてから開き直してください。",loadFailShort:"読み込みに失敗しました"},
- en:{loading:"Loading…",loadingData:"Loading data…",vMap:"Heatmap",vList:"Returns",vWeight:"Index weights",back:"← Back to all",wTitle:"Nasdaq 100 index weights",top20:"Top 20",allStocks:"All",rTitle:"Market-cap rank history (month-end)",y10:"10Y",y5:"5Y",y3:"3Y",
+ en:{loading:"Loading…",loadingData:"Loading data…",vMap:"Heatmap",vList:"Returns",vWeight:"Index weights",vChart:"Chart",back:"← Back to all",wTitle:"Nasdaq 100 index weights",top20:"Top 20",allStocks:"All",rTitle:"Market-cap rank history (month-end)",y10:"10Y",y5:"5Y",y3:"3Y",
   tfD:"Daily",tfW:"Weekly",tfM:"Monthly",scLin:"Linear",scLog:"Log",idxTitle:"Nasdaq 100 index",candles:"Candles",contribTitle:"Contribution to the index",contribSub:"Start weight × return (pt)",secTitle:"Sectors",secSub:"Tap to filter the map",lab:"Fear Index Research Institute",openTqqq:"Open TQQQ",switchTo:"日本語",
   d1:"1D",w1:"1W",w4:"1M",w13:"3M",w26:"6M",ytd:"YTD",w52:"1Y",r3M:"3M",r6M:"6M",r1Y:"1Y",r2Y:"2Y",r5Y:"5Y",r10Y:"10Y",rALL:"All",
   cap:m=>m>=1e6?"$"+(m/1e6).toFixed(2)+"T":"$"+(m/1e3).toFixed(m>=1e5?0:1)+"B",updated:v=>`Updated ${v}`,open:"US market open",closed:"US market closed",stale:"Update delayed",
@@ -383,7 +384,7 @@ const store={get(k,d){try{const v=localStorage.getItem("ndxhm."+k);return v==nul
 const state={period:store.get("period","d1"),view:store.get("view","map"),wscope:store.get("wscope","20"),rrange:store.get("rrange","10"),rsel:null,rmonth:null,zoom:null,sel:null,
   itf:store.get("itf","d"),isc:store.get("isc","lin"),irange:{d:store.get("ir_d","6M"),w:store.get("ir_w","2Y"),m:store.get("ir_m","ALL")},ici:null};
 if(state.view==="rank")state.view="weight";  // the rank chart now lives in the weight view
-if(!["map","list","weight"].includes(state.view))state.view="map";
+if(!["map","list","weight","chart"].includes(state.view))state.view="map";
 if(!["10","5","3"].includes(state.rrange))state.rrange="10";
 let RH=null;
 if(!PLABEL[state.period])state.period="d1";
@@ -496,7 +497,7 @@ function idxLogTicks([a,b]){
 }
 function renderIdx(){
   const box=$("ibox"), el=$("ichart");
-  box.hidden=state.view!=="map"||!!state.zoom;
+  box.hidden=state.view!=="chart";  // the candle chart has a tab of its own
   document.querySelectorAll("#itf button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.itf===state.itf));
   document.querySelectorAll("#isc button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.isc===state.isc));
   $("irange").innerHTML=IRANGES[state.itf].map(([k,l])=>`<button type="button" data-ir="${k}" aria-pressed="${k===state.irange[state.itf]}">${tr(l)}</button>`).join("");
@@ -751,10 +752,10 @@ function renderMapOrList(){
   $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="weight"||!!state.zoom;
   $("cols").hidden=v!=="map";  // contributions and sectors belong to the heatmap view
   document.body.dataset.view=v;  // the weights view shows the weights alone (no period, price block or hint)
-  $("summary").hidden=v==="weight";  // the day's breadth panel has no place among the weights
+  $("summary").hidden=v==="weight"||v==="chart";  // the day's breadth panel has no place among the weights
   $("back").hidden=!state.zoom;
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
-  $("hint").textContent=state.zoom?tr("showing",secJa(state.zoom)):({map:tr("hintMap"),list:tr("hintList",PLABEL[state.period]),weight:tr("hintWeight",weightNote())})[v];
+  $("hint").textContent=state.zoom?tr("showing",secJa(state.zoom)):({map:tr("hintMap"),list:tr("hintList",PLABEL[state.period]),weight:tr("hintWeight",weightNote()),chart:""})[v];
   renderIdx();
   if(v==="map")renderMap();else if(v==="list")renderList();else if(v==="weight"){renderWeights();if(!state.zoom)renderRanks()}
 }
@@ -772,7 +773,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v38";
+const APP_VER="ndx-heatmap-v39";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
@@ -837,7 +838,7 @@ $("map").addEventListener("pointermove",e=>{
 });
 $("map").addEventListener("pointerleave",()=>{tip.hidden=true});
 
-let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(DATA&&state.view==="map")renderMap();if(DATA&&state.view==="weight"&&!state.zoom)renderRanks();if(DATA&&state.view==="map")renderIdx()},80)}).observe($("map").parentElement);
+let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(DATA&&state.view==="map")renderMap();if(DATA&&state.view==="weight"&&!state.zoom)renderRanks();if(DATA&&state.view==="chart")renderIdx()},80)}).observe($("map").parentElement);
 // rank chart: a tap (or click) picks the month, sliding a finger sideways moves it,
 // a vertical swipe scrolls the page and keeps it; a tap outside the chart clears it
 {const rc=$("rchart");let t=null;
@@ -857,7 +858,7 @@ let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(DATA&&stat
  document.addEventListener("pointercancel",()=>{out=null},true);
  document.addEventListener("pointerup",e=>{const o=out;out=null;
    if(!o||e.pointerId!==o.id||Math.hypot(e.clientX-o.x,e.clientY-o.y)>=10||(state.rmonth==null&&state.ici==null))return;
-   state.rmonth=null;state.ici=null;if(DATA&&state.view==="weight")renderRanks();if(DATA&&state.view==="map")renderIdx()},true);}
+   state.rmonth=null;state.ici=null;if(DATA&&state.view==="weight")renderRanks();if(DATA&&state.view==="chart")renderIdx()},true);}
 // index chart: the same tap / slide / scroll behaviour as the rank chart
 {const el=$("ichart");let t=null;
  const at=e=>{const g=el._geo,svg=el.querySelector("svg");if(!g||!svg)return;const r=svg.getBoundingClientRect();
