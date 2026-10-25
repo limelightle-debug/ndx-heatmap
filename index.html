@@ -261,9 +261,9 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
   </div>
 
   <div id="app" hidden>
+    <!-- the period applies to everything below, the index's change included -->
+    <div class="seg" id="periods" role="group" aria-label="期間" style="width:fit-content;margin:2px 0 12px"></div>
     <div class="price" id="price" hidden></div>
-    <!-- the price above is always the latest day; the period applies from here down -->
-    <div class="seg" id="periods" role="group" aria-label="期間" style="width:fit-content"></div>
     <div class="summary" id="summary"></div>
     <section class="mapbox">
       <div class="maphead">
@@ -346,7 +346,7 @@ const I18N={
   tfD:"日足",tfW:"週足",tfM:"月足",scLin:"通常",scLog:"対数",idxTitle:"ナスダック100指数",candles:"ローソク足",contribTitle:"指数への寄与",contribSub:"期初ウェイト×騰落率（%pt）",secTitle:"セクター",secSub:"タップでマップを絞り込み",lab:"恐怖指数研究所",openTqqq:"TQQQ を開く",switchTo:"EN",
   d1:"1日",w1:"1週",w4:"1ヶ月",w13:"3ヶ月",w26:"6ヶ月",ytd:"年初来",w52:"1年",r3M:"3ヶ月",r6M:"6ヶ月",r1Y:"1年",r2Y:"2年",r5Y:"5年",r10Y:"10年",rALL:"全期間",
   cap:m=>m>=1e6?(m/1e6).toFixed(2)+"兆ドル":Math.round(m/100).toLocaleString()+"億ドル",updated:v=>`更新 ${v}`,open:"米国市場 取引中",closed:"米国市場 時間外",stale:"更新が遅れています",
-  wApprox:"時価総額ベースの概算",wUpd:(m,d)=>`更新 ${m}/${d}`,wQqq:(m,d)=>`QQQの保有比率（${m}/${d}時点）`,idxPrep:"指数のデータを準備中です",monthN:m=>m+"月",idxAria:"ナスダック100指数のローソク足チャート",cl:"終",op:"始",hi:"高",lo:"安",high:"高値",low:"安値",
+  wApprox:"時価総額ベースの概算",wUpd:(m,d)=>`更新 ${m}/${d}`,wQqq:(m,d)=>`QQQの保有比率（${m}/${d}時点）`,idxPrep:"指数のデータを準備中です",monthN:m=>m+"月",idxAria:"ナスダック100指数のローソク足チャート",cl:"終",op:"始",hi:"高",lo:"安",high:"高値",low:"安値",pHigh:"期間高値",pLow:"期間安値",baseClose:(d,v)=>`${d}終値 ${v} 比`,
   idxName:"ナスダック100指数",latest:"最新値",closeOf:d=>`${d}の終値`,closeW:"終値",prevClose:"前日終値",idxW:p=>`指数加重・${p}`,nStocks:n=>`${n}銘柄`,upDown:"上昇 / 下落",upRatio:v=>`上昇比率 ${v}%`,best:"最大上昇",worst:"最大下落",
   sum:"合計",sumEq:p=>`（＝指数加重・${p}）`,none:"該当なし",push:"押し上げ",drag:"押し下げ",other:"その他",top10:"上位10社",top20s:"上位20社",rest:n=>`残り${n}社`,rankBelow:r=>`${r}位以下`,whTicker:"銘柄",whWeight:"構成比率",
   ym:k=>{const[y,m]=k.split("-");return`${y}年${+m}月`},rLoading:"順位の履歴を読み込んでいます…",rAria:"時価総額上位20社の順位推移",up:"上昇",down:"下落",flat:"横ばい",rKeyNote:n=>`${n}年前（上場時）と比べて3位以上の変化`,
@@ -357,7 +357,7 @@ const I18N={
   tfD:"Daily",tfW:"Weekly",tfM:"Monthly",scLin:"Linear",scLog:"Log",idxTitle:"Nasdaq 100 index",candles:"Candles",contribTitle:"Contribution to the index",contribSub:"Start weight × return (pt)",secTitle:"Sectors",secSub:"Tap to filter the map",lab:"Fear Index Research Institute",openTqqq:"Open TQQQ",switchTo:"日本語",
   d1:"1D",w1:"1W",w4:"1M",w13:"3M",w26:"6M",ytd:"YTD",w52:"1Y",r3M:"3M",r6M:"6M",r1Y:"1Y",r2Y:"2Y",r5Y:"5Y",r10Y:"10Y",rALL:"All",
   cap:m=>m>=1e6?"$"+(m/1e6).toFixed(2)+"T":"$"+(m/1e3).toFixed(m>=1e5?0:1)+"B",updated:v=>`Updated ${v}`,open:"US market open",closed:"US market closed",stale:"Update delayed",
-  wApprox:"estimated from market caps",wUpd:(m,d)=>`Updated ${m}/${d}`,wQqq:(m,d)=>`QQQ holdings as of ${m}/${d}`,idxPrep:"Index data is being prepared",monthN:m=>MONS[m-1],idxAria:"Nasdaq 100 index candlestick chart",cl:"C",op:"O",hi:"H",lo:"L",high:"High",low:"Low",
+  wApprox:"estimated from market caps",wUpd:(m,d)=>`Updated ${m}/${d}`,wQqq:(m,d)=>`QQQ holdings as of ${m}/${d}`,idxPrep:"Index data is being prepared",monthN:m=>MONS[m-1],idxAria:"Nasdaq 100 index candlestick chart",cl:"C",op:"O",hi:"H",lo:"L",high:"High",low:"Low",pHigh:"Period high",pLow:"Period low",baseClose:(d,v)=>`vs ${d} close ${v}`,
   idxName:"Nasdaq 100 index",latest:"Latest",closeOf:d=>`${d} close`,closeW:"Close",prevClose:"Prev. close",idxW:p=>`Index-weighted · ${p}`,nStocks:n=>`${n} stocks`,upDown:"Up / Down",upRatio:v=>`${v}% up`,best:"Top gainer",worst:"Top loser",
   sum:"Total",sumEq:p=>` (= index-weighted · ${p})`,none:"None",push:"Lifted",drag:"Dragged",other:"Other",top10:"Top 10",top20s:"Top 20",rest:n=>`Other ${n}`,rankBelow:r=>`#${r} and below`,whTicker:"Stock",whWeight:"Weight",
   ym:k=>{const[y,m]=k.split("-");return`${MONS[m-1]} ${y}`},rLoading:"Loading rank history…",rAria:"Rank history of the top 20 by market cap",up:"Up",down:"Down",flat:"Flat",rKeyNote:n=>`3+ places changed vs ${n} years ago (or listing)`,
@@ -526,17 +526,32 @@ function renderIdx(){
   $("iread").innerHTML=`<div class="rrow"><b>${lbl}</b><span>${tr("cl")} <b>${f(b.c)}</b></span></div><div class="rrow"><span>${tr("op")} ${f(b.o)}</span><span>${tr("hi")} ${f(b.h)}</span><span>${tr("lo")} ${f(b.l)}</span></div>`;
 }
 // the Nasdaq-100 index level, like the price at the top of the TQQQ app
+// the close a period's change is measured from (the last close on or before the period's start), and the bars after it
+function idxBase(p){
+  const D=idxDays();if(p==="d1"||D.length<2)return null;
+  const z=new Date(D[D.length-1].t),y=z.getUTCFullYear(),m=z.getUTCMonth(),d=z.getUTCDate();
+  const off={w1:[0,7],w4:[1,0],w13:[3,0],w26:[6,0],w52:[12,0]}[p];
+  const target=p==="ytd"?Date.UTC(y-1,11,31):off?Date.UTC(y,m-off[0],d-off[1]):null;
+  if(target==null)return null;
+  let i=D.length-1;while(i>0&&D[i].t>target)i--;
+  return i<D.length-1?{b:D[i],after:D.slice(i+1)}:null;
+}
 function renderPrice(){
   const q=DATA&&DATA.index, el=$("price");
   if(!q||q.price==null){el.hidden=true;return}
   const n=v=>v.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
-  const d=q.prev?q.price-q.prev:null, r=q.prev?q.price/q.prev-1:null;
-  const live=/\d:\d/.test(q.time||""), hl=q.high!=null&&q.low!=null;
+  const live=/\d:\d/.test(q.time||"");
   const m=String(q.time||"").match(/([A-Z][a-z]{2}) (\d{1,2}), (\d{4})/);
   const day=m?`${"JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(m[1])/3+1}/${+m[2]}`:"";
+  // 1 day: against the previous close; longer periods: against the close before the period, high and low over it
+  const pb=idxBase(state.period),ref=pb?pb.b.c:q.prev;
+  const d=ref?q.price-ref:null, r=ref?q.price/ref-1:null;
+  const hi=pb?Math.max(...pb.after.map(x=>x.h),q.high??-Infinity):q.high, lo=pb?Math.min(...pb.after.map(x=>x.l),q.low??Infinity):q.low;
+  const hl=hi!=null&&lo!=null&&isFinite(hi)&&isFinite(lo);
+  const md=x=>`${pb&&x.d.slice(0,4)!==pb.after[pb.after.length-1].d.slice(0,4)?x.d.slice(0,4)+"/":""}${+x.d.slice(5,7)}/${+x.d.slice(8,10)}`;  // the year too when it is last year
   el.hidden=false;
-  el.innerHTML=`<div class="p">${n(q.price)}</div><div class="pside">${d==null?"":`<div class="chg ${cls(r*100)}">${d>=0?"+":"−"}${n(Math.abs(d))}（${fmt(r*100,2)}）</div>`}${hl?`<div class="dhl"><span>${tr("high")} <b>${n(q.high)}</b></span><span>${tr("low")} <b>${n(q.low)}</b></span></div>`:""}</div>
-   <div class="meta">${tr("idxName")} · ${live?tr("latest"):day?tr("closeOf",day):tr("closeW")}${q.prev?` · ${tr("prevClose")} ${n(q.prev)}`:""}</div>`;
+  el.innerHTML=`<div class="p">${n(q.price)}</div><div class="pside">${d==null?"":`<div class="chg ${cls(r*100)}">${d>=0?"+":"−"}${n(Math.abs(d))}（${fmt(r*100,2)}）</div>`}${hl?`<div class="dhl"><span>${tr(pb?"pHigh":"high")} <b>${n(hi)}</b></span><span>${tr(pb?"pLow":"low")} <b>${n(lo)}</b></span></div>`:""}</div>
+   <div class="meta">${tr("idxName")} · ${live?tr("latest"):day?tr("closeOf",day):tr("closeW")}${pb?` · ${tr("baseClose",md(pb.b),n(pb.b.c))}`:q.prev?` · ${tr("prevClose")} ${n(q.prev)}`:""}</div>`;
 }
 function renderSummary(){
   const all=STOCKS.filter(s=>val(s.t)!=null);
@@ -757,7 +772,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v35";
+const APP_VER="ndx-heatmap-v36";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
@@ -784,7 +799,7 @@ async function load(manual){
     if(!RH||manual)await loadRanks();
     const idxChanged=await loadIdx();
     if(!DATA||d.updatedAt!==DATA.updatedAt||manual){setData(d);renderAll()}
-    else{renderStatus();if(idxChanged)renderIdx()}
+    else{renderStatus();if(idxChanged){renderIdx();renderPrice()}}
   }catch(e){
     if(!DATA){$("empty").textContent=tr("loadFail");$("status").textContent=tr("loadFailShort")}
     else renderStatus();
