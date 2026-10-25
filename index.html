@@ -147,7 +147,9 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .wnote{font-size:11.5px;color:var(--muted);margin:10px 0 0}
 /* rank history view */
 #ranks{margin-top:26px;padding-top:16px;border-top:1px solid var(--line)}
-.wtitle{margin:2px 0 10px}
+.wtitle{margin:2px 0 12px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.wtitle b{font-size:19px;font-weight:700;color:var(--ink);letter-spacing:.02em}
+.wtitle span{font-size:12px;color:var(--muted);white-space:nowrap}
 .rtop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
 .rtitle{font-size:13px;font-weight:700;color:var(--ink2);letter-spacing:.04em}
 .rkey{display:flex;gap:12px;font-size:11.5px;color:var(--muted);flex-wrap:wrap;margin-bottom:4px}
@@ -270,7 +272,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
       <div id="map" role="img" aria-label="Nasdaq 100 heatmap"></div>
       <div id="list" hidden></div>
       <div id="weights" hidden>
-        <div class="rtitle wtitle" data-i18n="wTitle">ナスダック100 指数構成銘柄比率</div>
+        <div class="wtitle"><b data-i18n="wTitle">ナスダック100 指数構成銘柄比率</b><span id="wasof"></span></div>
         <div class="wtop">
           <div class="wstats" id="wstats"></div>
           <div class="seg" id="wscope" role="group" aria-label="表示する銘柄">
@@ -340,7 +342,7 @@ const I18N={
   tfD:"日足",tfW:"週足",tfM:"月足",scLin:"通常",scLog:"対数",idxTitle:"ナスダック100指数",candles:"ローソク足",contribTitle:"指数への寄与",contribSub:"期初ウェイト×騰落率（%pt）",secTitle:"セクター",secSub:"タップでマップを絞り込み",lab:"恐怖指数研究所",openTqqq:"TQQQ を開く",switchTo:"EN",
   d1:"1日",w1:"1週",w4:"1ヶ月",w13:"3ヶ月",w26:"6ヶ月",ytd:"年初来",w52:"1年",r3M:"3ヶ月",r6M:"6ヶ月",r1Y:"1年",r2Y:"2年",r5Y:"5年",r10Y:"10年",rALL:"全期間",
   cap:m=>m>=1e6?(m/1e6).toFixed(2)+"兆ドル":Math.round(m/100).toLocaleString()+"億ドル",updated:v=>`更新 ${v}`,open:"米国市場 取引中",closed:"米国市場 時間外",stale:"更新が遅れています",
-  wApprox:"時価総額ベースの概算",wQqq:(m,d)=>`QQQの保有比率（${m}/${d}時点）`,idxPrep:"指数のデータを準備中です",monthN:m=>m+"月",idxAria:"ナスダック100指数のローソク足チャート",cl:"終",op:"始",hi:"高",lo:"安",high:"高値",low:"安値",
+  wApprox:"時価総額ベースの概算",wUpd:(m,d)=>`更新 ${m}/${d}`,wQqq:(m,d)=>`QQQの保有比率（${m}/${d}時点）`,idxPrep:"指数のデータを準備中です",monthN:m=>m+"月",idxAria:"ナスダック100指数のローソク足チャート",cl:"終",op:"始",hi:"高",lo:"安",high:"高値",low:"安値",
   idxName:"ナスダック100指数",latest:"最新値",closeOf:d=>`${d}の終値`,closeW:"終値",prevClose:"前日終値",idxW:p=>`指数加重・${p}`,nStocks:n=>`${n}銘柄`,upDown:"上昇 / 下落",upRatio:v=>`上昇比率 ${v}%`,best:"最大上昇",worst:"最大下落",
   sum:"合計",sumEq:p=>`（＝指数加重・${p}）`,none:"該当なし",push:"押し上げ",drag:"押し下げ",other:"その他",top10:"上位10社",top20s:"上位20社",rest:n=>`残り${n}社`,rankBelow:r=>`${r}位以下`,
   ym:k=>{const[y,m]=k.split("-");return`${y}年${+m}月`},rLoading:"順位の履歴を読み込んでいます…",rAria:"時価総額上位20社の順位推移",up:"上昇",down:"下落",flat:"横ばい",rKeyNote:n=>`${n}年前（上場時）と比べて3位以上の変化`,
@@ -351,7 +353,7 @@ const I18N={
   tfD:"Daily",tfW:"Weekly",tfM:"Monthly",scLin:"Linear",scLog:"Log",idxTitle:"Nasdaq 100 index",candles:"Candles",contribTitle:"Contribution to the index",contribSub:"Start weight × return (pt)",secTitle:"Sectors",secSub:"Tap to filter the map",lab:"Fear Index Research Institute",openTqqq:"Open TQQQ",switchTo:"日本語",
   d1:"1D",w1:"1W",w4:"1M",w13:"3M",w26:"6M",ytd:"YTD",w52:"1Y",r3M:"3M",r6M:"6M",r1Y:"1Y",r2Y:"2Y",r5Y:"5Y",r10Y:"10Y",rALL:"All",
   cap:m=>m>=1e6?"$"+(m/1e6).toFixed(2)+"T":"$"+(m/1e3).toFixed(m>=1e5?0:1)+"B",updated:v=>`Updated ${v}`,open:"US market open",closed:"US market closed",stale:"Update delayed",
-  wApprox:"estimated from market caps",wQqq:(m,d)=>`QQQ holdings as of ${m}/${d}`,idxPrep:"Index data is being prepared",monthN:m=>MONS[m-1],idxAria:"Nasdaq 100 index candlestick chart",cl:"C",op:"O",hi:"H",lo:"L",high:"High",low:"Low",
+  wApprox:"estimated from market caps",wUpd:(m,d)=>`Updated ${m}/${d}`,wQqq:(m,d)=>`QQQ holdings as of ${m}/${d}`,idxPrep:"Index data is being prepared",monthN:m=>MONS[m-1],idxAria:"Nasdaq 100 index candlestick chart",cl:"C",op:"O",hi:"H",lo:"L",high:"High",low:"Low",
   idxName:"Nasdaq 100 index",latest:"Latest",closeOf:d=>`${d} close`,closeW:"Close",prevClose:"Prev. close",idxW:p=>`Index-weighted · ${p}`,nStocks:n=>`${n} stocks`,upDown:"Up / Down",upRatio:v=>`${v}% up`,best:"Top gainer",worst:"Top loser",
   sum:"Total",sumEq:p=>` (= index-weighted · ${p})`,none:"None",push:"Lifted",drag:"Dragged",other:"Other",top10:"Top 10",top20s:"Top 20",rest:n=>`Other ${n}`,rankBelow:r=>`#${r} and below`,
   ym:k=>{const[y,m]=k.split("-");return`${MONS[m-1]} ${y}`},rLoading:"Loading rank history…",rAria:"Rank history of the top 20 by market cap",up:"Up",down:"Down",flat:"Flat",rKeyNote:n=>`3+ places changed vs ${n} years ago (or listing)`,
@@ -632,6 +634,7 @@ function renderList(){
     return `<button type="button" class="row" data-t="${s.t}"><span class="rk num">${i+1}</span><span class="tk">${s.t}</span><span class="nm"><div>${esc(s.name)}</div><small>${secJa(s.sec)} · ${fmtCap(s.cap)}</small></span><span class="dbar bc"><i style="${bar}"></i></span><span class="v num ${cls(v)}">${fmt(v)}</span></button>`}).join("");
 }
 function renderWeights(){
+  {const w=DATA&&DATA.weights,d=w&&w.asOf&&w.asOf.split("-");$("wasof").textContent=d?tr("wUpd",+d[1],+d[2]):tr("wApprox")}
   const all=[...STOCKS].sort((a,b)=>b.w-a.w);
   const w=s=>s.w;
   const top10=all.slice(0,10).reduce((a,s)=>a+w(s),0), top20=all.slice(0,20).reduce((a,s)=>a+w(s),0);
@@ -750,7 +753,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v31";
+const APP_VER="ndx-heatmap-v32";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
