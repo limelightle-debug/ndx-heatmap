@@ -254,9 +254,9 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
     <div class="controls">
       <div class="seg" id="views" role="group" aria-label="表示">
         <button type="button" data-v="map" data-i18n="vMap">ヒートマップ</button>
+        <button type="button" data-v="chart" data-i18n="vChart">チャート</button>
         <button type="button" data-v="list" data-i18n="vList">騰落率</button>
         <button type="button" data-v="weight" data-i18n="vWeight">指数構成銘柄比率</button>
-        <button type="button" data-v="chart" data-i18n="vChart">チャート</button>
       </div>
       <!-- under the tabs and fixed with them: the period applies to everything below, the index's change included -->
       <div class="seg" id="periods" role="group" aria-label="期間"></div>
@@ -773,7 +773,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v39";
+const APP_VER="ndx-heatmap-v40";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
