@@ -252,7 +252,6 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
       <div class="langseg" id="lang" role="group" aria-label="Language"><button type="button" data-lang="ja">JP</button><button type="button" data-lang="en">EN</button></div>
     </div>
     <div class="controls">
-      <div class="seg" id="periods" role="group" aria-label="期間"></div>
       <div class="seg" id="views" role="group" aria-label="表示">
         <button type="button" data-v="map" data-i18n="vMap">ヒートマップ</button>
         <button type="button" data-v="list" data-i18n="vList">騰落率</button>
@@ -263,6 +262,8 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 
   <div id="app" hidden>
     <div class="price" id="price" hidden></div>
+    <!-- the price above is always the latest day; the period applies from here down -->
+    <div class="seg" id="periods" role="group" aria-label="期間" style="width:fit-content"></div>
     <div class="summary" id="summary"></div>
     <section class="mapbox">
       <div class="maphead">
@@ -756,7 +757,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v34";
+const APP_VER="ndx-heatmap-v35";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
