@@ -657,12 +657,11 @@ function renderMap(){
 function renderList(){
   const list=STOCKS.filter(s=>!state.zoom||s.sec===state.zoom).sort((a,b)=>(val(b.t)??-1e9)-(val(a.t)??-1e9));
   const mx=Math.max(...list.map(s=>Math.abs(val(s.t)||0)),1e-9);
-  // a title, with the period the returns cover
   // the top three and the bottom three at a glance
   const okv=list.filter(s=>val(s.t)!=null),t3=okv.slice(0,3),b3=okv.slice(-3).reverse();
   const col=(lab,arr)=>`<div><div class="lsl">${lab}</div>${arr.map(s=>`<button type="button" class="lsr" data-t="${s.t}"><b>${s.t}</b><span class="num ${cls(val(s.t))}">${fmt(val(s.t))}</span></button>`).join("")}</div>`;
   const sum=okv.length>=6?`<div class="lsum">${col(tr("lTop3"),t3)}${col(tr("lBot3"),b3)}</div>`:"";
-  $("ltop").innerHTML=`<div class="wtitle"><b>${tr("lTitle")}</b><span>${tr("lPeriod",PLABEL[state.period])}</span></div>`+summaryHtml()+sum;
+  $("ltop").innerHTML=summaryHtml()+sum;
   $("list").innerHTML=list.map((s,i)=>{
     const v=val(s.t);const pct=Math.abs(v||0)/mx*50;
     const bar=v==null?"":v>=0?`left:50%;width:${pct}%;background:${C.up};border-radius:0 3px 3px 0`:`right:50%;width:${pct}%;background:${C.down};border-radius:3px 0 0 3px`;
@@ -787,7 +786,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v49";
+const APP_VER="ndx-heatmap-v50";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
