@@ -39,7 +39,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .avatar{width:42px;height:42px;border-radius:10px;flex:none;box-shadow:0 0 0 1px var(--line)}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 [hidden]{display:none!important}
-body[data-view="weight"] #price,body[data-view="weight"] #hint,body[data-view="weight"] .maphead .legend{display:none}
+body[data-view="weight"] #periods,body[data-view="weight"] #price,body[data-view="weight"] #hint,body[data-view="weight"] .maphead .legend{display:none}
 
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding-block:12px 10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
 .titlerow{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -134,17 +134,16 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .wstats div{font-size:11.5px;color:var(--muted);letter-spacing:.04em}
 .wstats b{display:block;font-family:var(--f-tick);font-stretch:82%;font-size:24px;font-weight:700;color:var(--ink);letter-spacing:0;font-variant-numeric:tabular-nums;line-height:1.15}
 #wlist{display:flex;flex-direction:column;gap:2px}
-.wrow{appearance:none;border:0;background:var(--panel);color:inherit;font:inherit;text-align:left;display:grid;grid-template-columns:26px 58px minmax(0,1fr) 56px 60px;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer}
+.wrow{appearance:none;border:0;background:var(--panel);color:inherit;font:inherit;text-align:left;display:grid;grid-template-columns:26px 58px minmax(0,1fr) 60px;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer}
 .wrow:hover{background:var(--chip)}
 .wrow.whead{background:none;cursor:default;padding-top:0;padding-bottom:2px;font-size:11px;color:var(--muted);letter-spacing:.04em;align-items:end}
 .wrow.whead:hover{background:none}
 .whead .wh2{grid-column:3/5;text-align:right}
-.whead .v small{display:block;font-size:11px;color:var(--ink2);font-weight:700}
 .wrow .rk{font-size:12px;color:var(--muted);text-align:right}
 .wrow .tk{font-family:var(--f-tick);font-stretch:82%;font-weight:700;font-size:16px;line-height:1.1}
 .wrow .tk small{display:block;font-family:var(--f-body);font-stretch:100%;font-weight:400;font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wbar{height:16px;position:relative;background:var(--chip);border-radius:3px;overflow:hidden}
-.wbar i{position:absolute;left:0;top:0;bottom:0;border-radius:0 3px 3px 0}
+.wbar i{position:absolute;left:0;top:0;bottom:0;border-radius:0 3px 3px 0;background:var(--accent);opacity:.7}
 .wrow .w{text-align:right;font-size:16px;font-weight:700}
 .wrow .v{text-align:right;font-size:13px}
 .wsep{font-size:11px;color:var(--muted);padding:8px 10px 4px;letter-spacing:.04em}
@@ -348,7 +347,7 @@ const I18N={
   cap:m=>m>=1e6?(m/1e6).toFixed(2)+"兆ドル":Math.round(m/100).toLocaleString()+"億ドル",updated:v=>`更新 ${v}`,open:"米国市場 取引中",closed:"米国市場 時間外",stale:"更新が遅れています",
   wApprox:"時価総額ベースの概算",wUpd:(m,d)=>`更新 ${m}/${d}`,wQqq:(m,d)=>`QQQの保有比率（${m}/${d}時点）`,idxPrep:"指数のデータを準備中です",monthN:m=>m+"月",idxAria:"ナスダック100指数のローソク足チャート",cl:"終",op:"始",hi:"高",lo:"安",high:"高値",low:"安値",
   idxName:"ナスダック100指数",latest:"最新値",closeOf:d=>`${d}の終値`,closeW:"終値",prevClose:"前日終値",idxW:p=>`指数加重・${p}`,nStocks:n=>`${n}銘柄`,upDown:"上昇 / 下落",upRatio:v=>`上昇比率 ${v}%`,best:"最大上昇",worst:"最大下落",
-  sum:"合計",sumEq:p=>`（＝指数加重・${p}）`,none:"該当なし",push:"押し上げ",drag:"押し下げ",other:"その他",top10:"上位10社",top20s:"上位20社",rest:n=>`残り${n}社`,rankBelow:r=>`${r}位以下`,whTicker:"銘柄",whWeight:"構成比率",whRet:"騰落率",
+  sum:"合計",sumEq:p=>`（＝指数加重・${p}）`,none:"該当なし",push:"押し上げ",drag:"押し下げ",other:"その他",top10:"上位10社",top20s:"上位20社",rest:n=>`残り${n}社`,rankBelow:r=>`${r}位以下`,whTicker:"銘柄",whWeight:"構成比率",
   ym:k=>{const[y,m]=k.split("-");return`${y}年${+m}月`},rLoading:"順位の履歴を読み込んでいます…",rAria:"時価総額上位20社の順位推移",up:"上昇",down:"下落",flat:"横ばい",rKeyNote:n=>`${n}年前（上場時）と比べて3位以上の変化`,
   rSel:(t,ym,f,c,ym2,m)=>`<b>${t}</b>　${ym} ${f}位 → 現在 ${c}位${m!=null?`（${ym2}は${m}位）`:""}`,rankOf:ym=>`${ym}の順位`,newest:"最新",monthEnd:"月末",rNote:"↑↓は、その月から現在までの順位の変化です。",
   close:"閉じる",mcap:"時価総額",idxWeight:"指数ウェイト",contribP:p=>`寄与（${p}）`,startW:"期初ウェイト",finviz:t=>`finvizで${t}を開く ↗`,showing:s=>`${s}を表示中`,
@@ -359,7 +358,7 @@ const I18N={
   cap:m=>m>=1e6?"$"+(m/1e6).toFixed(2)+"T":"$"+(m/1e3).toFixed(m>=1e5?0:1)+"B",updated:v=>`Updated ${v}`,open:"US market open",closed:"US market closed",stale:"Update delayed",
   wApprox:"estimated from market caps",wUpd:(m,d)=>`Updated ${m}/${d}`,wQqq:(m,d)=>`QQQ holdings as of ${m}/${d}`,idxPrep:"Index data is being prepared",monthN:m=>MONS[m-1],idxAria:"Nasdaq 100 index candlestick chart",cl:"C",op:"O",hi:"H",lo:"L",high:"High",low:"Low",
   idxName:"Nasdaq 100 index",latest:"Latest",closeOf:d=>`${d} close`,closeW:"Close",prevClose:"Prev. close",idxW:p=>`Index-weighted · ${p}`,nStocks:n=>`${n} stocks`,upDown:"Up / Down",upRatio:v=>`${v}% up`,best:"Top gainer",worst:"Top loser",
-  sum:"Total",sumEq:p=>` (= index-weighted · ${p})`,none:"None",push:"Lifted",drag:"Dragged",other:"Other",top10:"Top 10",top20s:"Top 20",rest:n=>`Other ${n}`,rankBelow:r=>`#${r} and below`,whTicker:"Stock",whWeight:"Weight",whRet:"Return",
+  sum:"Total",sumEq:p=>` (= index-weighted · ${p})`,none:"None",push:"Lifted",drag:"Dragged",other:"Other",top10:"Top 10",top20s:"Top 20",rest:n=>`Other ${n}`,rankBelow:r=>`#${r} and below`,whTicker:"Stock",whWeight:"Weight",
   ym:k=>{const[y,m]=k.split("-");return`${MONS[m-1]} ${y}`},rLoading:"Loading rank history…",rAria:"Rank history of the top 20 by market cap",up:"Up",down:"Down",flat:"Flat",rKeyNote:n=>`3+ places changed vs ${n} years ago (or listing)`,
   rSel:(t,ym,f,c,ym2,m)=>`<b>${t}</b>　#${f} in ${ym} → #${c} now${m!=null?` (#${m} in ${ym2})`:""}`,rankOf:ym=>`Ranks, ${ym}`,newest:"latest",monthEnd:"month-end",rNote:"↑↓ show the change in rank from that month to now.",
   close:"Close",mcap:"Market cap",idxWeight:"Index weight",contribP:p=>`Contribution (${p})`,startW:"Start weight",finviz:t=>`Open ${t} on finviz ↗`,showing:s=>`Showing ${s}`,
@@ -647,12 +646,11 @@ function renderWeights(){
   if(state.zoom)list=list.filter(x=>x.s.sec===state.zoom);
   else if(state.wscope==="20")list=list.slice(0,20);
   const mx=Math.max(...list.map(x=>w(x.s)),1e-9);
-  // column heads: what each number is (only the return on the right follows the period above)
-  let html=`<div class="wrow whead"><span></span><span>${tr("whTicker")}</span><span class="wh2">${tr("whWeight")}</span><span class="v">${tr("whRet")}<small>${PLABEL[state.period]}</small></span></div>`;
+  // column heads: what each number is
+  let html=`<div class="wrow whead"><span></span><span>${tr("whTicker")}</span><span class="wh2">${tr("whWeight")}</span></div>`;
   list.forEach((x,i)=>{
     if(!state.zoom&&state.wscope==="all"&&(x.rank===11||x.rank===21))html+=`<div class="wsep">${tr("rankBelow",x.rank)}</div>`;
-    const v=val(x.s.t);
-    html+=`<button type="button" class="wrow" data-t="${x.s.t}"><span class="rk num">${x.rank}</span><span class="tk">${x.s.t}<small>${esc(x.s.name)}</small></span><span class="wbar"><i style="width:${Math.max(1,w(x.s)/mx*100)}%;background:${color(v)}"></i></span><span class="w num">${w(x.s).toFixed(2)}%</span><span class="v num ${cls(v)}">${fmt(v)}</span></button>`;
+    html+=`<button type="button" class="wrow" data-t="${x.s.t}"><span class="rk num">${x.rank}</span><span class="tk">${x.s.t}<small>${esc(x.s.name)}</small></span><span class="wbar"><i style="width:${Math.max(1,w(x.s)/mx*100)}%"></i></span><span class="w num">${w(x.s).toFixed(2)}%</span></button>`;
   });
   $("wlist").innerHTML=html;
   $("wscope").hidden=!!state.zoom;
@@ -736,7 +734,7 @@ function renderMapOrList(){
   const v=state.view;
   $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="weight"||!!state.zoom;
   $("cols").hidden=v==="weight";  // contributions and sectors belong to the map and ranking views
-  document.body.dataset.view=v;  // the weights view shows the weights alone (no price block, no hint)
+  document.body.dataset.view=v;  // the weights view shows the weights alone (no period, price block or hint)
   $("summary").hidden=v==="weight";  // the day's breadth panel has no place among the weights
   $("back").hidden=!state.zoom;
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
@@ -758,7 +756,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v33";
+const APP_VER="ndx-heatmap-v34";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
