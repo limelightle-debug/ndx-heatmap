@@ -39,7 +39,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .avatar{width:42px;height:42px;border-radius:10px;flex:none;box-shadow:0 0 0 1px var(--line)}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 [hidden]{display:none!important}
-body[data-view="chart"] .mapbox,body[data-view="weight"] #periods,body[data-view="weight"] #price,body[data-view="list"] #price,body[data-view="weight"] #hint,body[data-view="weight"] .maphead .legend,body[data-view="list"] #hint,body[data-view="list"] .maphead .legend{display:none}
+body[data-view="chart"] .mapbox,body[data-view="weight"] #periods,body[data-view="weight"] #price,body[data-view="weight"] #hint,body[data-view="weight"] .maphead .legend,body[data-view="list"] #hint,body[data-view="list"] .maphead .legend{display:none}
 
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding-block:12px 10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
 .titlerow{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -787,7 +787,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v48";
+const APP_VER="ndx-heatmap-v49";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
