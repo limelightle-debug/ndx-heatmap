@@ -66,6 +66,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .stat .sub{font-size:12px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pos{color:var(--upc)} .neg{color:var(--downc)}
 
+.lpanel{margin-bottom:10px}
 .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin:0 0 14px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
 .panel h2{margin:0 0 10px;font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--ink2);display:flex;justify-content:space-between;gap:8px}
@@ -129,7 +130,7 @@ body[data-view="list"] .price{margin-bottom:10px}
 #list{display:flex;flex-direction:column;gap:2px}
 .row{appearance:none;border:0;background:var(--panel);color:inherit;font:inherit;text-align:left;display:grid;grid-template-columns:30px 62px minmax(0,1fr) minmax(70px,26%) 70px;align-items:center;gap:8px;padding:9px 10px;border-radius:6px;cursor:pointer}
 .row:hover{background:var(--chip)}
-.lsum{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.lsum{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
 .lsl{font-size:11.5px;color:var(--muted);letter-spacing:.04em;margin-bottom:4px}
 .lsr{appearance:none;border:0;background:none;color:inherit;font:inherit;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;width:100%;padding:3px 0}
 .lsr b{font-family:var(--f-tick);font-stretch:82%;font-size:17px}
@@ -288,19 +289,18 @@ body[data-view="list"] .price{margin-bottom:10px}
         <div class="legend"><span class="num" id="lgL"></span><span class="ramp" id="ramp"></span><span class="num" id="lgR"></span></div>
       </div>
       <div id="map" role="img" aria-label="Nasdaq 100 heatmap"></div>
-      <!-- returns view: title, breadth, top/bottom 3, then contributions and sectors, then the ranked rows -->
+      <!-- returns view: breadth, sectors, top/bottom 3, contributions, then the ranked rows -->
       <div id="ltop" hidden></div>
-      <div class="cols" id="cols">
-        <section class="panel">
-          <h2><i class="h2t" data-i18n="contribTitle">指数への寄与</i> <span data-i18n="contribSub">期初ウェイト×騰落率（%pt）</span></h2>
-          <div class="csum" id="csum"></div>
-          <div class="contrib" id="contrib"></div>
-        </section>
-        <section class="panel">
-          <h2><i class="h2t" data-i18n="secTitle">セクター</i> <span data-i18n="secSub">タップで絞り込み</span></h2>
-          <div id="sectors"></div>
-        </section>
-      </div>
+      <section class="panel lpanel" id="secp" hidden>
+        <h2><i class="h2t" data-i18n="secTitle">セクター</i> <span data-i18n="secSub">タップで絞り込み</span></h2>
+        <div id="sectors"></div>
+      </section>
+      <div id="lmid" hidden></div>
+      <section class="panel lpanel" id="conp" hidden>
+        <h2><i class="h2t" data-i18n="contribTitle">指数への寄与</i> <span data-i18n="contribSub">期初ウェイト×騰落率（%pt）</span></h2>
+        <div class="csum" id="csum"></div>
+        <div class="contrib" id="contrib"></div>
+      </section>
       <div id="list" hidden></div>
       <div id="weights" hidden>
         <div class="wtitle"><b data-i18n="wTitle">ナスダック100 指数構成銘柄比率</b><span id="wasof"></span></div>
@@ -664,7 +664,7 @@ function renderList(){
   const okv=list.filter(s=>val(s.t)!=null),t3=okv.slice(0,3),b3=okv.slice(-3).reverse();
   const col=(lab,arr)=>`<div><div class="lsl">${lab}</div>${arr.map(s=>`<button type="button" class="lsr" data-t="${s.t}"><b>${s.t}</b><span class="num ${cls(val(s.t))}">${fmt(val(s.t))}</span></button>`).join("")}</div>`;
   const sum=okv.length>=6?`<div class="lsum">${col(tr("lTop3"),t3)}${col(tr("lBot3"),b3)}</div>`:"";
-  $("ltop").innerHTML=summaryHtml()+sum;
+  $("ltop").innerHTML=summaryHtml();$("lmid").innerHTML=sum;
   $("list").innerHTML=list.map((s,i)=>{
     const v=val(s.t);const pct=Math.abs(v||0)/mx*50;
     const bar=v==null?"":v>=0?`left:50%;width:${pct}%;background:${C.up};border-radius:0 3px 3px 0`:`right:50%;width:${pct}%;background:${C.down};border-radius:3px 0 0 3px`;
@@ -767,7 +767,7 @@ function renderDetail(){
 function renderMapOrList(){
   const v=state.view;
   $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="weight"||!!state.zoom;
-  $("cols").hidden=$("ltop").hidden=v!=="list";  // contributions and sectors belong to the returns view
+  ["ltop","secp","lmid","conp"].forEach(id=>$(id).hidden=v!=="list");  // the returns view's panels
   document.body.dataset.view=v;  // the weights view shows the weights alone (no period, price block or hint)
   $("back").hidden=!state.zoom;
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
@@ -789,7 +789,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v51";
+const APP_VER="ndx-heatmap-v52";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
