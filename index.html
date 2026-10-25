@@ -121,6 +121,9 @@ body[data-view="list"] .price{margin-bottom:10px}
 /* the weights and the rank history sit in panels like the rest (the heatmap keeps its full width) */
 #weights,#ranks{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
 #weights .wrow:not(.whead){background:var(--chip)}
+#list{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}  /* the ranking sits in a panel too */
+#list .row{background:var(--chip)}
+@media (hover:hover){#list .row:hover{background:var(--mid)}}
 #weights .wrow:not(.whead):hover{background:var(--mid)}
 .cols+.foot{margin-top:18px}
 .maphead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
@@ -810,7 +813,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v62";
+const APP_VER="ndx-heatmap-v63";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
