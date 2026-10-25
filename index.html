@@ -112,7 +112,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .secrow .v{text-align:right;font-size:15px;font-weight:600}
 
 .mapbox{margin-top:14px}
-body[data-view="list"] .maphead:has(#back[hidden]){display:none}  /* nothing to show there unless a sector is picked */
+body[data-view="list"] .maphead{display:none}  /* nothing to show there */
 body[data-view="list"] .mapbox{margin-top:10px}
 body[data-view="list"] .price{margin-bottom:10px}
 /* the weights and the rank history sit in panels like the rest (the heatmap keeps its full width) */
@@ -292,7 +292,6 @@ body[data-view="list"] .price{margin-bottom:10px}
     <section class="mapbox">
       <div class="maphead">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <button type="button" class="back" id="back" hidden data-i18n="back">← 全体に戻る</button>
           <span class="hint" id="hint"></span>
         </div>
         <div class="legend"><span class="num" id="lgL"></span><span class="ramp" id="ramp"></span><span class="num" id="lgR"></span></div>
@@ -779,7 +778,6 @@ function renderMapOrList(){
   $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="weight"||!!state.zoom;
   ["ltop","secp","conp"].forEach(id=>$(id).hidden=v!=="list");  // the returns view's panels
   document.body.dataset.view=v;  // the weights view shows the weights alone (no period, price block or hint)
-  $("back").hidden=!state.zoom;
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
   $("hint").textContent=state.zoom?tr("showing",secJa(state.zoom)):({map:tr("hintMap"),list:tr("hintList",PLABEL[state.period]),weight:tr("hintWeight",weightNote()),chart:""})[v];
   renderIdx();
@@ -799,7 +797,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v57";
+const APP_VER="ndx-heatmap-v58";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
@@ -836,7 +834,7 @@ async function load(manual){
 /* events */
 document.addEventListener("click",e=>{
   const p=e.target.closest("[data-p]");if(p){state.period=p.dataset.p;store.set("period",state.period);renderAll();return}
-  const v=e.target.closest("[data-v]");if(v){state.view=v.dataset.v;store.set("view",state.view);renderAll();return}
+  const v=e.target.closest("[data-v]");if(v){if(v.dataset.v!==state.view)state.zoom=null;state.view=v.dataset.v;store.set("view",state.view);renderAll();return}  // a picked sector stays with its tab
   const rr=e.target.closest("[data-rr]");if(rr){state.rrange=rr.dataset.rr;store.set("rrange",state.rrange);state.rmonth=null;renderControls();renderRanks();return}
   const rk=e.target.closest("[data-rk]");if(rk){state.rsel=state.rsel===rk.dataset.rk?null:rk.dataset.rk;renderRanks();return}
   const ws=e.target.closest("[data-w]");if(ws){state.wscope=ws.dataset.w;store.set("wscope",state.wscope);renderControls();renderWeights();return}
@@ -844,7 +842,6 @@ document.addEventListener("click",e=>{
   const itf=e.target.closest("[data-itf]");if(itf){state.itf=itf.dataset.itf;store.set("itf",state.itf);state.ici=null;renderIdx();return}
   const isc=e.target.closest("[data-isc]");if(isc){state.isc=isc.dataset.isc;store.set("isc",state.isc);renderIdx();return}
   const ir=e.target.closest("[data-ir]");if(ir){state.irange[state.itf]=ir.dataset.ir;store.set("ir_"+state.itf,ir.dataset.ir);state.ici=null;renderIdx();return}
-  if(e.target.closest("#back")){state.zoom=null;renderSectors();renderMapOrList();return}
   const t=e.target.closest("[data-t]");if(t){const tk=t.dataset.t;state.sel=state.sel===tk?null:tk;$("tip").hidden=true;renderMapOrList();renderDetail();return}
 });
 document.addEventListener("keydown",e=>{
