@@ -101,8 +101,9 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .crow .v{text-align:right;font-size:14px}
 
 .secrow{appearance:none;border:0;background:transparent;color:inherit;font:inherit;width:100%;display:grid;grid-template-columns:minmax(78px,9em) 46px minmax(0,1fr) 62px;align-items:center;gap:8px;padding:6px;border-radius:6px;cursor:pointer;text-align:left}
-.secrow:hover{background:var(--chip)}
-.secrow[aria-pressed="true"]{background:var(--chip);box-shadow:inset 3px 0 0 var(--accent)}
+@media (hover:hover){.secrow:hover{background:var(--chip)}}  /* no sticky hover on touch: it read as a selection */
+.secrow[aria-pressed="true"]{background:var(--panel);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.4)}
+.secrow[aria-pressed="true"] .nm{font-weight:700}  /* picked like the other buttons; tap again to clear */
 .secrow .nm{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .secrow .wt{font-size:12px;color:var(--muted);text-align:right}
 .dbar{position:relative;height:12px}
@@ -798,7 +799,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v55";
+const APP_VER="ndx-heatmap-v56";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
@@ -839,7 +840,7 @@ document.addEventListener("click",e=>{
   const rr=e.target.closest("[data-rr]");if(rr){state.rrange=rr.dataset.rr;store.set("rrange",state.rrange);state.rmonth=null;renderControls();renderRanks();return}
   const rk=e.target.closest("[data-rk]");if(rk){state.rsel=state.rsel===rk.dataset.rk?null:rk.dataset.rk;renderRanks();return}
   const ws=e.target.closest("[data-w]");if(ws){state.wscope=ws.dataset.w;store.set("wscope",state.wscope);renderControls();renderWeights();return}
-  const se=e.target.closest("[data-sec]");if(se){state.zoom=state.zoom===se.dataset.sec?null:se.dataset.sec;renderSectors();renderMapOrList();$("map").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});return}
+  const se=e.target.closest("[data-sec]");if(se){state.zoom=state.zoom===se.dataset.sec?null:se.dataset.sec;renderSectors();renderMapOrList();if(state.view==="map")$("map").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});return}
   const itf=e.target.closest("[data-itf]");if(itf){state.itf=itf.dataset.itf;store.set("itf",state.itf);state.ici=null;renderIdx();return}
   const isc=e.target.closest("[data-isc]");if(isc){state.isc=isc.dataset.isc;store.set("isc",state.isc);renderIdx();return}
   const ir=e.target.closest("[data-ir]");if(ir){state.irange[state.itf]=ir.dataset.ir;store.set("ir_"+state.itf,ir.dataset.ir);state.ici=null;renderIdx();return}
