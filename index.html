@@ -69,6 +69,10 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .lmerge{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
 .lmerge .lc{padding:12px 14px;min-width:0}
 .lmerge .lfull{grid-column:1/3;border-bottom:1px solid var(--line)}
+.lud{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.lud .lab{font-size:11.5px;color:var(--muted);letter-spacing:.04em}
+.lud .val{font-family:var(--f-tick);font-stretch:82%;font-weight:700;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
+.lud .sub{font-size:12px;color:var(--ink2)}
 .lmerge .lc:last-child:not(.lfull){border-left:1px solid var(--line)}
 .lmerge .stat{padding:0;background:none}
 .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin:0 0 14px}
@@ -579,7 +583,8 @@ function summaryCells(){
   const r=wret(all);
   const up=all.filter(s=>val(s.t)>0).length, dn=all.filter(s=>val(s.t)<0).length;
   return [`<div class="stat"><div class="lab">${tr("idxW",PLABEL[state.period])}</div><div class="val ${cls(r)}">${fmt(r,2)}</div><div class="sub">${tr("nStocks",all.length)}</div></div>`,
-   `<div class="stat"><div class="lab">${tr("upDown")}</div><div class="val"><span class="pos">${up}</span><span style="color:var(--muted);font-weight:500"> / </span><span class="neg">${dn}</span></div><div class="sub">${tr("upRatio",Math.round(up/all.length*100))}</div></div>`];
+   // one line: label, count, ratio
+   `<div class="lud"><span class="lab">${tr("upDown")}</span><span class="val"><span class="pos">${up}</span><span style="color:var(--muted);font-weight:500"> / </span><span class="neg">${dn}</span></span><span class="sub">${tr("upRatio",Math.round(up/all.length*100))}</span></div>`];
 }
 function renderContrib(){
   const rows=STOCKS.map(s=>({t:s.t,c:contrib(s.t)})).filter(r=>r.c!=null);
@@ -793,7 +798,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v54";
+const APP_VER="ndx-heatmap-v55";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
