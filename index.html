@@ -68,9 +68,9 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .lpanel{margin-bottom:10px}
 .lmerge{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
 .lmerge .lc{padding:12px 14px;min-width:0}
-.lmerge .lc+.lc{border-left:1px solid var(--line)}
+.lmerge .lfull{grid-column:1/3;border-bottom:1px solid var(--line)}
+.lmerge .lc:last-child:not(.lfull){border-left:1px solid var(--line)}
 .lmerge .stat{padding:0;background:none}
-.lsep{border-top:1px solid var(--line);margin:12px -14px 10px}
 .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin:0 0 14px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
 .panel h2{margin:0 0 10px;font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--ink2);display:flex;justify-content:space-between;gap:8px}
@@ -666,8 +666,9 @@ function renderList(){
   const okv=list.filter(s=>val(s.t)!=null),t3=okv.slice(0,3),b3=okv.slice(-3).reverse();
   const col=(lab,arr)=>`<div><div class="lsl">${lab}</div>${arr.map(s=>`<button type="button" class="lsr" data-t="${s.t}"><b>${s.t}</b><span class="num ${cls(val(s.t))}">${fmt(val(s.t))}</span></button>`).join("")}</div>`;
   // one panel: the breadth on top, the top three and the bottom three under it
-  const [ca,cb]=summaryCells(),six=okv.length>=6;
-  $("ltop").innerHTML=`<div class="lmerge"><div class="lc">${ca}${six?`<div class="lsep"></div>${col(tr("lTop3"),t3)}`:""}</div><div class="lc">${cb}${six?`<div class="lsep"></div>${col(tr("lBot3"),b3)}`:""}</div></div>`;
+  const [,cb]=summaryCells(),six=okv.length>=6;
+  // (the index-weighted return is left out: the index's own change sits just above)
+  $("ltop").innerHTML=`<div class="lmerge"><div class="lc lfull">${cb}</div>${six?`<div class="lc">${col(tr("lTop3"),t3)}</div><div class="lc">${col(tr("lBot3"),b3)}</div>`:""}</div>`;
   $("list").innerHTML=list.map((s,i)=>{
     const v=val(s.t);const pct=Math.abs(v||0)/mx*50;
     const bar=v==null?"":v>=0?`left:50%;width:${pct}%;background:${C.up};border-radius:0 3px 3px 0`:`right:50%;width:${pct}%;background:${C.down};border-radius:3px 0 0 3px`;
@@ -792,7 +793,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v53";
+const APP_VER="ndx-heatmap-v54";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
