@@ -749,7 +749,7 @@ function renderDetail(){
 function renderMapOrList(){
   const v=state.view;
   $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="weight"||!!state.zoom;
-  $("cols").hidden=v==="weight";  // contributions and sectors belong to the map and ranking views
+  $("cols").hidden=v!=="map";  // contributions and sectors belong to the heatmap view
   document.body.dataset.view=v;  // the weights view shows the weights alone (no period, price block or hint)
   $("summary").hidden=v==="weight";  // the day's breadth panel has no place among the weights
   $("back").hidden=!state.zoom;
@@ -772,7 +772,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v37";
+const APP_VER="ndx-heatmap-v38";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
