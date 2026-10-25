@@ -102,6 +102,10 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .secrow .v{text-align:right;font-size:15px;font-weight:600}
 
 .mapbox{margin-top:14px}
+/* the heatmap, the weights and the rank history sit in panels like the rest */
+body[data-view="map"] .mapbox,#weights,#ranks{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+#weights .wrow:not(.whead){background:var(--chip)}
+#weights .wrow:not(.whead):hover{background:var(--mid)}
 .cols+.foot{margin-top:18px}
 .maphead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .maphead .hint{font-size:12px;color:var(--muted)}
@@ -156,7 +160,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .wsep{font-size:11px;color:var(--muted);padding:8px 10px 4px;letter-spacing:.04em}
 .wnote{font-size:11.5px;color:var(--muted);margin:10px 0 0}
 /* rank history view */
-#ranks{margin-top:26px;padding-top:16px;border-top:1px solid var(--line)}
+#ranks{margin-top:14px}
 .wtitle{margin:2px 0 12px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .wtitle b{font-size:19px;font-weight:700;color:var(--ink);letter-spacing:.02em}
 .wtitle span{font-size:12px;color:var(--muted);white-space:nowrap}
@@ -783,7 +787,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v46";
+const APP_VER="ndx-heatmap-v47";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
