@@ -669,10 +669,10 @@ function renderList(){
   const list=STOCKS.filter(s=>!state.zoom||s.sec===state.zoom).sort((a,b)=>(val(b.t)??-1e9)-(val(a.t)??-1e9));
   const mx=Math.max(...list.map(s=>Math.abs(val(s.t)||0)),1e-9);
   // the top three and the bottom three at a glance
-  const okv=list.filter(s=>val(s.t)!=null),t3=okv.slice(0,3),b3=okv.slice(-3).reverse();
-  const col=(lab,arr)=>`<div><div class="lsl">${lab}</div>${arr.map(s=>`<button type="button" class="lsr" data-t="${s.t}"><b>${s.t}</b><span class="num ${cls(val(s.t))}">${fmt(val(s.t))}</span></button>`).join("")}</div>`;
+  const okv=list.filter(s=>val(s.t)!=null),t3=okv.slice(0,3),b3=okv.slice(3).slice(-3).reverse();  // a small sector: no name twice
+  const col=(lab,arr)=>`<div><div class="lsl">${lab}</div>${[0,1,2].map(i=>{const s=arr[i];return s?`<button type="button" class="lsr" data-t="${s.t}"><b>${s.t}</b><span class="num ${cls(val(s.t))}">${fmt(val(s.t))}</span></button>`:`<div class="lsr"><b>-</b><span>-</span></div>`}).join("")}</div>`;
   // one panel: the breadth on top, the top three and the bottom three under it
-  const [,cb]=summaryCells(),six=okv.length>=6;
+  const [,cb]=summaryCells(),six=okv.length>0;  // always three rows each (- where a sector has fewer), so the panel keeps its size
   // (the index-weighted return is left out: the index's own change sits just above)
   $("ltop").innerHTML=`<div class="lmerge"><div class="lc lfull">${cb}</div>${six?`<div class="lc">${col(tr("lTop3"),t3)}</div><div class="lc">${col(tr("lBot3"),b3)}</div>`:""}</div>`;
   $("list").innerHTML=list.map((s,i)=>{
@@ -799,7 +799,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v56";
+const APP_VER="ndx-heatmap-v57";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
