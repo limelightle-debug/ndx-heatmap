@@ -72,8 +72,12 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .lmerge{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .lmerge .lc{padding:12px 14px;min-width:0}
 .lmerge .lfull{grid-column:1/3;border-bottom:1px solid var(--line)}
-.lud{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
-.lud .lab{font-size:11.5px;color:var(--muted);letter-spacing:.04em}
+.lud{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:baseline;gap:6px}  /* the flat count sits at the centre */
+.lud .l,.lud .r{display:flex;justify-content:space-between;align-items:baseline;gap:6px;min-width:0}
+.lud .sl{color:var(--muted);font-weight:500;white-space:pre}
+.lud .lab{white-space:nowrap}
+.lud>.val{color:var(--ink2)}
+.lud .lab{font-size:11px;color:var(--muted);letter-spacing:0}
 .lud .val{font-family:var(--f-tick);font-stretch:82%;font-weight:700;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
 .lud .sub{font-size:12px;color:var(--ink2)}
 .lmerge .lc:last-child:not(.lfull){border-left:1px solid var(--line)}
@@ -381,7 +385,7 @@ const I18N={
   d1:"1日",w1:"1週",w4:"1ヶ月",w13:"3ヶ月",w26:"6ヶ月",ytd:"年初来",w52:"1年",r3M:"3ヶ月",r6M:"6ヶ月",r1Y:"1年",r2Y:"2年",r5Y:"5年",r10Y:"10年",rALL:"全期間",
   cap:m=>m>=1e6?(m/1e6).toFixed(2)+"兆ドル":Math.round(m/100).toLocaleString()+"億ドル",updated:v=>`更新 ${v}`,open:"米国市場 取引中",closed:"米国市場 時間外",stale:"更新が遅れています",
   wApprox:"時価総額ベースの概算",wUpd:(m,d)=>`更新 ${m}/${d}`,wQqq:(m,d)=>`QQQの保有比率（${m}/${d}時点）`,idxPrep:"指数のデータを準備中です",monthN:m=>m+"月",idxAria:"ナスダック100指数のローソク足チャート",cl:"終",op:"始",hi:"高",lo:"安",high:"高値",low:"安値",pHigh:"期間高値",pLow:"期間安値",baseClose:(d,v)=>`${d}終値 ${v} 比`,
-  idxName:"ナスダック100指数",latest:"最新値",closeOf:d=>`${d}の終値`,closeW:"終値",prevClose:"前日終値",idxW:p=>`指数加重・${p}`,nStocks:n=>`${n}銘柄`,upDown:"上昇 / 下落",upFlatDown:"上昇 / 横ばい / 下落",upRatio:v=>`上昇比率 ${v}%`,best:"最大上昇",worst:"最大下落",
+  idxName:"ナスダック100指数",latest:"最新値",closeOf:d=>`${d}の終値`,closeW:"終値",prevClose:"前日終値",idxW:p=>`指数加重・${p}`,nStocks:n=>`${n}銘柄`,upDown:"上昇 / 下落",upFlatDown:"上昇/横ばい/下落",upRatio:v=>`上昇比率 ${v}%`,best:"最大上昇",worst:"最大下落",
   sum:"合計",sumEq:p=>`（＝指数加重・${p}）`,none:"該当なし",push:"押し上げ",drag:"押し下げ",other:"その他",top10:"上位10社",top20s:"上位20社",rest:n=>`残り${n}社`,rankBelow:r=>`${r}位以下`,whTicker:"銘柄",whWeight:"構成比率",
   ym:k=>{const[y,m]=k.split("-");return`${y}年${+m}月`},rLoading:"順位の履歴を読み込んでいます…",rAria:"時価総額上位20社の順位推移",up:"上昇",down:"下落",flat:"横ばい",rKeyNote:n=>`${n}年前（上場時）と比べて3位以上の変化`,
   rSel:(t,ym,f,c,ym2,m)=>`<b>${t}</b>　${ym} ${f}位 → 現在 ${c}位${m!=null?`（${ym2}は${m}位）`:""}`,rankOf:ym=>`${ym}の順位`,newest:"最新",monthEnd:"月末",rNote:"↑↓は、その月から現在までの順位の変化です。",
@@ -392,7 +396,7 @@ const I18N={
   d1:"1D",w1:"1W",w4:"1M",w13:"3M",w26:"6M",ytd:"YTD",w52:"1Y",r3M:"3M",r6M:"6M",r1Y:"1Y",r2Y:"2Y",r5Y:"5Y",r10Y:"10Y",rALL:"All",
   cap:m=>m>=1e6?"$"+(m/1e6).toFixed(2)+"T":"$"+(m/1e3).toFixed(m>=1e5?0:1)+"B",updated:v=>`Updated ${v}`,open:"US market open",closed:"US market closed",stale:"Update delayed",
   wApprox:"estimated from market caps",wUpd:(m,d)=>`Updated ${m}/${d}`,wQqq:(m,d)=>`QQQ holdings as of ${m}/${d}`,idxPrep:"Index data is being prepared",monthN:m=>MONS[m-1],idxAria:"Nasdaq 100 index candlestick chart",cl:"C",op:"O",hi:"H",lo:"L",high:"High",low:"Low",pHigh:"Period high",pLow:"Period low",baseClose:(d,v)=>`vs ${d} close ${v}`,
-  idxName:"Nasdaq 100 index",latest:"Latest",closeOf:d=>`${d} close`,closeW:"Close",prevClose:"Prev. close",idxW:p=>`Index-weighted · ${p}`,nStocks:n=>`${n} stocks`,upDown:"Up / Down",upFlatDown:"Up / Flat / Down",upRatio:v=>`${v}% up`,best:"Top gainer",worst:"Top loser",
+  idxName:"Nasdaq 100 index",latest:"Latest",closeOf:d=>`${d} close`,closeW:"Close",prevClose:"Prev. close",idxW:p=>`Index-weighted · ${p}`,nStocks:n=>`${n} stocks`,upDown:"Up / Down",upFlatDown:"Up/Flat/Down",upRatio:v=>`${v}% up`,best:"Top gainer",worst:"Top loser",
   sum:"Total",sumEq:p=>` (= index-weighted · ${p})`,none:"None",push:"Lifted",drag:"Dragged",other:"Other",top10:"Top 10",top20s:"Top 20",rest:n=>`Other ${n}`,rankBelow:r=>`#${r} and below`,whTicker:"Stock",whWeight:"Weight",
   ym:k=>{const[y,m]=k.split("-");return`${MONS[m-1]} ${y}`},rLoading:"Loading rank history…",rAria:"Rank history of the top 20 by market cap",up:"Up",down:"Down",flat:"Flat",rKeyNote:n=>`3+ places changed vs ${n} years ago (or listing)`,
   rSel:(t,ym,f,c,ym2,m)=>`<b>${t}</b>　#${f} in ${ym} → #${c} now${m!=null?` (#${m} in ${ym2})`:""}`,rankOf:ym=>`Ranks, ${ym}`,newest:"latest",monthEnd:"month-end",rNote:"↑↓ show the change in rank from that month to now.",
@@ -595,7 +599,7 @@ function summaryCells(){
   const up=all.filter(s=>val(s.t)>0).length, dn=all.filter(s=>val(s.t)<0).length, fl=all.length-up-dn;  // unchanged ones counted too, so the three add up
   return [`<div class="stat"><div class="lab">${tr("idxW",PLABEL[state.period])}</div><div class="val ${cls(r)}">${fmt(r,2)}</div><div class="sub">${tr("nStocks",all.length)}</div></div>`,
    // one line: label, count, ratio
-   `<div class="lud"><span class="lab">${tr("upFlatDown")}</span><span class="val"><span class="pos">${up}</span><span style="color:var(--muted);font-weight:500"> / </span><span style="color:var(--ink2)">${fl}</span><span style="color:var(--muted);font-weight:500"> / </span><span class="neg">${dn}</span></span><span class="sub">${tr("upRatio",Math.round(up/all.length*100))}</span></div>`];
+   `<div class="lud"><div class="l"><span class="lab">${tr("upFlatDown")}</span><span class="val pos">${up}</span></div><div class="val"><span class="sl"> / </span>${fl}<span class="sl"> / </span></div><div class="r"><span class="val neg">${dn}</span><span class="sub">${tr("upRatio",Math.round(up/all.length*100))}</span></div></div>`];
 }
 function renderContrib(){
   const rows=STOCKS.map(s=>({t:s.t,c:contrib(s.t)})).filter(r=>r.c!=null);
@@ -813,7 +817,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v64";
+const APP_VER="ndx-heatmap-v65";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
