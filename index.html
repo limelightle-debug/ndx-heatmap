@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=LINE+Seed+JP:wght@400;700;800&display=swap">
 <style>
-/* Layout: sticky control bar → summary band → contributors + sector ranking (2 columns on wide screens) → treemap or ranked list */
+/* Layout: sticky control bar (tabs, period) → index → treemap / ranked list (with its breadth panel) / weights / candle chart */
 :root{
   /* always dark, like the TQQQ app */
   --bg:#0f1114; --panel:#171a1f; --ink:#eef0f2; --ink2:#b9bfc8; --muted:#848c97; --line:#2a2f37; --accent:#5ea4ff;
@@ -59,6 +59,7 @@ h1 small{font-family:var(--f-body);font-weight:500;font-size:13px;color:var(--mu
 button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
 .summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:14px}
+.summary.lsumm{grid-template-columns:repeat(2,minmax(0,1fr));margin:0 0 10px}
 .stat{background:var(--panel);padding:12px 14px;min-width:0}
 .stat .lab{font-size:11.5px;color:var(--muted);letter-spacing:.04em}
 .stat .val{font-family:var(--f-tick);font-weight:700;font-size:28px;line-height:1.15;font-variant-numeric:tabular-nums}
@@ -271,7 +272,6 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 
   <div id="app" hidden>
     <div class="price" id="price" hidden></div>
-    <div class="summary" id="summary"></div>
     <section class="mapbox">
       <div class="maphead">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -560,18 +560,15 @@ function renderPrice(){
   el.innerHTML=`<div class="p">${n(q.price)}</div><div class="pside">${d==null?"":`<div class="chg ${cls(r*100)}">${d>=0?"+":"−"}${n(Math.abs(d))}（${fmt(r*100,2)}）</div>`}${hl?`<div class="dhl"><span>${tr("pHigh")} <b>${n(hi)}</b></span><span>${tr("pLow")} <b>${n(lo)}</b></span></div>`:""}</div>
    <div class="meta">${tr("idxName")} · ${live?tr("latest"):day?tr("closeOf",day):tr("closeW")}${pb?` · ${tr("baseClose",md(pb.b),n(pb.b.c))}`:q.prev?` · ${tr("prevClose")} ${n(q.prev)}`:""}</div>`;
 }
-function renderSummary(){
+// the period's breadth for the returns view: the index-weighted return and the count of risers and fallers
+function summaryHtml(){
   const all=STOCKS.filter(s=>val(s.t)!=null);
-  if(!all.length){$("summary").innerHTML="";return}
+  if(!all.length)return "";
   const r=wret(all);
   const up=all.filter(s=>val(s.t)>0).length, dn=all.filter(s=>val(s.t)<0).length;
-  const sorted=[...all].sort((a,b)=>val(b.t)-val(a.t));
-  const best=sorted[0], worst=sorted[sorted.length-1];
-  $("summary").innerHTML=`
+  return `<div class="summary lsumm">
    <div class="stat"><div class="lab">${tr("idxW",PLABEL[state.period])}</div><div class="val ${cls(r)}">${fmt(r,2)}</div><div class="sub">${tr("nStocks",all.length)}</div></div>
-   <div class="stat"><div class="lab">${tr("upDown")}</div><div class="val"><span class="pos">${up}</span><span style="color:var(--muted);font-weight:500"> / </span><span class="neg">${dn}</span></div><div class="sub">${tr("upRatio",Math.round(up/all.length*100))}</div></div>
-   <div class="stat"><div class="lab">${tr("best")}</div><div class="val ${cls(val(best.t))}">${fmt(val(best.t))}</div><div class="sub"><b class="num" style="font-size:14px">${best.t}</b> ${esc(best.name)}</div></div>
-   <div class="stat"><div class="lab">${tr("worst")}</div><div class="val ${cls(val(worst.t))}">${fmt(val(worst.t))}</div><div class="sub"><b class="num" style="font-size:14px">${worst.t}</b> ${esc(worst.name)}</div></div>`;
+   <div class="stat"><div class="lab">${tr("upDown")}</div><div class="val"><span class="pos">${up}</span><span style="color:var(--muted);font-weight:500"> / </span><span class="neg">${dn}</span></div><div class="sub">${tr("upRatio",Math.round(up/all.length*100))}</div></div></div>`;
 }
 function renderContrib(){
   const rows=STOCKS.map(s=>({t:s.t,c:contrib(s.t)})).filter(r=>r.c!=null);
@@ -659,7 +656,7 @@ function renderList(){
   const okv=list.filter(s=>val(s.t)!=null),t3=okv.slice(0,3),b3=okv.slice(-3).reverse();
   const col=(lab,arr)=>`<div><div class="lsl">${lab}</div>${arr.map(s=>`<button type="button" class="lsr" data-t="${s.t}"><b>${s.t}</b><span class="num ${cls(val(s.t))}">${fmt(val(s.t))}</span></button>`).join("")}</div>`;
   const sum=okv.length>=6?`<div class="lsum">${col(tr("lTop3"),t3)}${col(tr("lBot3"),b3)}</div>`:"";
-  $("list").innerHTML=`<div class="wtitle"><b>${tr("lTitle")}</b><span>${tr("lPeriod",PLABEL[state.period])}</span></div>`+sum+list.map((s,i)=>{
+  $("list").innerHTML=`<div class="wtitle"><b>${tr("lTitle")}</b><span>${tr("lPeriod",PLABEL[state.period])}</span></div>`+summaryHtml()+sum+list.map((s,i)=>{
     const v=val(s.t);const pct=Math.abs(v||0)/mx*50;
     const bar=v==null?"":v>=0?`left:50%;width:${pct}%;background:${C.up};border-radius:0 3px 3px 0`:`right:50%;width:${pct}%;background:${C.down};border-radius:3px 0 0 3px`;
     return `<button type="button" class="row" data-t="${s.t}"><span class="rk num">${i+1}</span><span class="tk">${s.t}</span><span class="nm"><div>${esc(s.name)}</div><small>${secJa(s.sec)} · ${fmtCap(s.cap)}</small></span><span class="dbar bc"><i style="${bar}"></i></span><span class="v num ${cls(v)}">${fmt(v)}</span></button>`}).join("");
@@ -763,7 +760,6 @@ function renderMapOrList(){
   $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="weight"||!!state.zoom;
   $("cols").hidden=v!=="map";  // contributions and sectors belong to the heatmap view
   document.body.dataset.view=v;  // the weights view shows the weights alone (no period, price block or hint)
-  $("summary").hidden=v!=="map";  // the breadth panel belongs to the heatmap  // the day's breadth panel has no place among the weights
   $("back").hidden=!state.zoom;
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
   $("hint").textContent=state.zoom?tr("showing",secJa(state.zoom)):({map:tr("hintMap"),list:tr("hintList",PLABEL[state.period]),weight:tr("hintWeight",weightNote()),chart:""})[v];
@@ -774,7 +770,7 @@ function renderAll(){
   readColors();renderControls();
   if(!DATA)return;
   $("app").hidden=false;$("empty").hidden=true;
-  renderStatus();renderPrice();renderSummary();renderContrib();renderSectors();renderLegend();renderMapOrList();renderDetail();
+  renderStatus();renderPrice();renderContrib();renderSectors();renderLegend();renderMapOrList();renderDetail();
 }
 
 /* data loading */
@@ -784,7 +780,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v43";
+const APP_VER="ndx-heatmap-v44";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
