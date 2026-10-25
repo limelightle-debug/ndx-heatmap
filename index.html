@@ -66,7 +66,9 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .pos{color:var(--upc)} .neg{color:var(--downc)}
 
 .lpanel{margin-bottom:10px}
-.lmerge{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+.panel.lgroup{padding:0;overflow:hidden}
+.lsecs{padding:14px;border-top:1px solid var(--line)}
+.lmerge{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .lmerge .lc{padding:12px 14px;min-width:0}
 .lmerge .lfull{grid-column:1/3;border-bottom:1px solid var(--line)}
 .lud{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
@@ -298,10 +300,13 @@ body[data-view="list"] .price{margin-bottom:10px}
       </div>
       <div id="map" role="img" aria-label="Nasdaq 100 heatmap"></div>
       <!-- returns view: breadth with top/bottom 3, sectors, contributions, then the ranked rows -->
-      <div id="ltop" hidden></div>
-      <section class="panel lpanel" id="secp" hidden>
-        <h2><i class="h2t" data-i18n="secTitle">セクター</i> <span data-i18n="secSub">タップで絞り込み</span></h2>
-        <div id="sectors"></div>
+      <!-- one panel: breadth with top/bottom 3, then the sectors -->
+      <section class="panel lpanel lgroup" id="lgroup" hidden>
+        <div id="ltop"></div>
+        <div class="lsecs">
+          <h2><i class="h2t" data-i18n="secTitle">セクター</i> <span data-i18n="secSub">タップで絞り込み</span></h2>
+          <div id="sectors"></div>
+        </div>
       </section>
       <section class="panel lpanel" id="conp" hidden>
         <h2><i class="h2t" data-i18n="contribTitle">指数への寄与</i> <span data-i18n="contribSub">期初ウェイト×騰落率（%pt）</span></h2>
@@ -776,7 +781,7 @@ function renderDetail(){
 function renderMapOrList(){
   const v=state.view;
   $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="weight"||!!state.zoom;
-  ["ltop","secp","conp"].forEach(id=>$(id).hidden=v!=="list");  // the returns view's panels
+  ["lgroup","conp"].forEach(id=>$(id).hidden=v!=="list");  // the returns view's panels
   document.body.dataset.view=v;  // the weights view shows the weights alone (no period, price block or hint)
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
   $("hint").textContent=state.zoom?tr("showing",secJa(state.zoom)):({map:tr("hintMap"),list:tr("hintList",PLABEL[state.period]),weight:tr("hintWeight",weightNote()),chart:""})[v];
@@ -797,7 +802,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v58";
+const APP_VER="ndx-heatmap-v59";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
