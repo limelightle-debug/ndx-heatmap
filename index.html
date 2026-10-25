@@ -257,12 +257,12 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
         <button type="button" data-v="list" data-i18n="vList">騰落率</button>
         <button type="button" data-v="weight" data-i18n="vWeight">指数構成銘柄比率</button>
       </div>
+      <!-- under the tabs and fixed with them: the period applies to everything below, the index's change included -->
+      <div class="seg" id="periods" role="group" aria-label="期間"></div>
     </div>
   </div>
 
   <div id="app" hidden>
-    <!-- the period applies to everything below, the index's change included -->
-    <div class="seg" id="periods" role="group" aria-label="期間" style="width:fit-content;margin:2px 0 12px"></div>
     <div class="price" id="price" hidden></div>
     <div class="summary" id="summary"></div>
     <section class="mapbox">
@@ -550,7 +550,7 @@ function renderPrice(){
   const hl=hi!=null&&lo!=null&&isFinite(hi)&&isFinite(lo);
   const md=x=>`${pb&&x.d.slice(0,4)!==pb.after[pb.after.length-1].d.slice(0,4)?x.d.slice(0,4)+"/":""}${+x.d.slice(5,7)}/${+x.d.slice(8,10)}`;  // the year too when it is last year
   el.hidden=false;
-  el.innerHTML=`<div class="p">${n(q.price)}</div><div class="pside">${d==null?"":`<div class="chg ${cls(r*100)}">${d>=0?"+":"−"}${n(Math.abs(d))}（${fmt(r*100,2)}）</div>`}${hl?`<div class="dhl"><span>${tr(pb?"pHigh":"high")} <b>${n(hi)}</b></span><span>${tr(pb?"pLow":"low")} <b>${n(lo)}</b></span></div>`:""}</div>
+  el.innerHTML=`<div class="p">${n(q.price)}</div><div class="pside">${d==null?"":`<div class="chg ${cls(r*100)}">${d>=0?"+":"−"}${n(Math.abs(d))}（${fmt(r*100,2)}）</div>`}${hl?`<div class="dhl"><span>${tr("pHigh")} <b>${n(hi)}</b></span><span>${tr("pLow")} <b>${n(lo)}</b></span></div>`:""}</div>
    <div class="meta">${tr("idxName")} · ${live?tr("latest"):day?tr("closeOf",day):tr("closeW")}${pb?` · ${tr("baseClose",md(pb.b),n(pb.b.c))}`:q.prev?` · ${tr("prevClose")} ${n(q.prev)}`:""}</div>`;
 }
 function renderSummary(){
@@ -772,7 +772,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v36";
+const APP_VER="ndx-heatmap-v37";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
