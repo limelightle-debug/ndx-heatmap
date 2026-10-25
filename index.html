@@ -66,6 +66,7 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .pos{color:var(--upc)} .neg{color:var(--downc)}
 
 .lpanel{margin-bottom:10px}
+.lord{width:fit-content;margin:0 0 8px}
 .panel.lgroup{padding:0;overflow:hidden}
 .lsecs{padding:14px;border-top:1px solid var(--line)}
 .lmerge{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
@@ -373,7 +374,7 @@ let LANG=(()=>{try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")re
 const MONS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const I18N={
  ja:{loading:"読み込み中…",loadingData:"データを読み込んでいます…",vMap:"ヒートマップ",vList:"騰落率",vWeight:"指数構成銘柄比率",vChart:"チャート",lTitle:"騰落率ランキング",lTop3:"上位3社",lBot3:"下位3社",lPeriod:p=>`期間：${p}`,back:"← 全体に戻る",wTitle:"ナスダック100 指数構成銘柄比率",top20:"トップ20",allStocks:"全銘柄",rTitle:"時価総額の順位推移（月末）",y10:"10年",y5:"5年",y3:"3年",
-  tfD:"日足",tfW:"週足",tfM:"月足",scLin:"通常",scLog:"対数",idxTitle:"ナスダック100指数",candles:"ローソク足",contribTitle:"指数への寄与",contribSub:"期初ウェイト×騰落率（%pt）",secTitle:"セクター",secSub:"タップで絞り込み",secAll:"全体",lab:"恐怖指数研究所",openTqqq:"TQQQ を開く",switchTo:"EN",
+  tfD:"日足",tfW:"週足",tfM:"月足",scLin:"通常",scLog:"対数",idxTitle:"ナスダック100指数",candles:"ローソク足",contribTitle:"指数への寄与",contribSub:"期初ウェイト×騰落率（%pt）",secTitle:"セクター",secSub:"タップで絞り込み",secAll:"全体",lordUp:"値上がり順",lordDn:"値下がり順",lab:"恐怖指数研究所",openTqqq:"TQQQ を開く",switchTo:"EN",
   d1:"1日",w1:"1週",w4:"1ヶ月",w13:"3ヶ月",w26:"6ヶ月",ytd:"年初来",w52:"1年",r3M:"3ヶ月",r6M:"6ヶ月",r1Y:"1年",r2Y:"2年",r5Y:"5年",r10Y:"10年",rALL:"全期間",
   cap:m=>m>=1e6?(m/1e6).toFixed(2)+"兆ドル":Math.round(m/100).toLocaleString()+"億ドル",updated:v=>`更新 ${v}`,open:"米国市場 取引中",closed:"米国市場 時間外",stale:"更新が遅れています",
   wApprox:"時価総額ベースの概算",wUpd:(m,d)=>`更新 ${m}/${d}`,wQqq:(m,d)=>`QQQの保有比率（${m}/${d}時点）`,idxPrep:"指数のデータを準備中です",monthN:m=>m+"月",idxAria:"ナスダック100指数のローソク足チャート",cl:"終",op:"始",hi:"高",lo:"安",high:"高値",low:"安値",pHigh:"期間高値",pLow:"期間安値",baseClose:(d,v)=>`${d}終値 ${v} 比`,
@@ -384,7 +385,7 @@ const I18N={
   close:"閉じる",mcap:"時価総額",idxWeight:"指数ウェイト",contribP:p=>`寄与（${p}）`,startW:"期初ウェイト",finviz:t=>`finvizで${t}を開く ↗`,showing:s=>`${s}を表示中`,
   hintMap:"面積＝指数ウェイト、色＝騰落率。タップで詳細",hintList:p=>`${p}の騰落率順。タップで詳細`,hintWeight:n=>`指数ウェイト：${n}。タップで詳細`,loadFail:"データを読み込めませんでした。通信状況を確認して、しばらくしてから開き直してください。",loadFailShort:"読み込みに失敗しました"},
  en:{loading:"Loading…",loadingData:"Loading data…",vMap:"Heatmap",vList:"Returns",vWeight:"Index weights",vChart:"Chart",lTitle:"Return ranking",lTop3:"Top 3",lBot3:"Bottom 3",lPeriod:p=>`Period: ${p}`,back:"← Back to all",wTitle:"Nasdaq 100 index weights",top20:"Top 20",allStocks:"All",rTitle:"Market-cap rank history (month-end)",y10:"10Y",y5:"5Y",y3:"3Y",
-  tfD:"Daily",tfW:"Weekly",tfM:"Monthly",scLin:"Linear",scLog:"Log",idxTitle:"Nasdaq 100 index",candles:"Candles",contribTitle:"Contribution to the index",contribSub:"Start weight × return (pt)",secTitle:"Sectors",secSub:"Tap to filter",secAll:"All",lab:"Fear Index Research Institute",openTqqq:"Open TQQQ",switchTo:"日本語",
+  tfD:"Daily",tfW:"Weekly",tfM:"Monthly",scLin:"Linear",scLog:"Log",idxTitle:"Nasdaq 100 index",candles:"Candles",contribTitle:"Contribution to the index",contribSub:"Start weight × return (pt)",secTitle:"Sectors",secSub:"Tap to filter",secAll:"All",lordUp:"Best first",lordDn:"Worst first",lab:"Fear Index Research Institute",openTqqq:"Open TQQQ",switchTo:"日本語",
   d1:"1D",w1:"1W",w4:"1M",w13:"3M",w26:"6M",ytd:"YTD",w52:"1Y",r3M:"3M",r6M:"6M",r1Y:"1Y",r2Y:"2Y",r5Y:"5Y",r10Y:"10Y",rALL:"All",
   cap:m=>m>=1e6?"$"+(m/1e6).toFixed(2)+"T":"$"+(m/1e3).toFixed(m>=1e5?0:1)+"B",updated:v=>`Updated ${v}`,open:"US market open",closed:"US market closed",stale:"Update delayed",
   wApprox:"estimated from market caps",wUpd:(m,d)=>`Updated ${m}/${d}`,wQqq:(m,d)=>`QQQ holdings as of ${m}/${d}`,idxPrep:"Index data is being prepared",monthN:m=>MONS[m-1],idxAria:"Nasdaq 100 index candlestick chart",cl:"C",op:"O",hi:"H",lo:"L",high:"High",low:"Low",pHigh:"Period high",pLow:"Period low",baseClose:(d,v)=>`vs ${d} close ${v}`,
@@ -410,7 +411,7 @@ const secJa=s=>LANG==="ja"?SEC_JA[s]||s:s;
 
 let DATA=null, STOCKS=[], BY={}, CAPTOTAL=0, SECTORS=[], SWC={};
 const store={get(k,d){try{const v=localStorage.getItem("ndxhm."+k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem("ndxhm."+k,v)}catch(e){}}};
-const state={period:store.get("period","d1"),view:store.get("view","map"),wscope:store.get("wscope","20"),rrange:store.get("rrange","10"),rsel:null,rmonth:null,zoom:null,sel:null,
+const state={period:store.get("period","d1"),view:store.get("view","map"),wscope:store.get("wscope","20"),lorder:store.get("lorder","up"),rrange:store.get("rrange","10"),rsel:null,rmonth:null,zoom:null,sel:null,
   itf:store.get("itf","d"),isc:store.get("isc","lin"),irange:{d:store.get("ir_d","6M"),w:store.get("ir_w","2Y"),m:store.get("ir_m","ALL")},ici:null};
 if(state.view==="rank")state.view="weight";  // the rank chart now lives in the weight view
 if(!["map","list","weight","chart"].includes(state.view))state.view="map";
@@ -683,7 +684,10 @@ function renderList(){
   const [,cb]=summaryCells(),six=okv.length>0;  // always three rows each (- where a sector has fewer), so the panel keeps its size
   // (the index-weighted return is left out: the index's own change sits just above)
   $("ltop").innerHTML=`<div class="lmerge"><div class="lc lfull">${cb}</div>${six?`<div class="lc">${col(tr("lTop3"),t3)}</div><div class="lc">${col(tr("lBot3"),b3)}</div>`:""}</div>`;
-  $("list").innerHTML=list.map((s,i)=>{
+  // the ranked rows, best first or worst first (stocks without a value stay at the end)
+  const rows=state.lorder==="dn"?[...okv].reverse().concat(list.filter(s=>val(s.t)==null)):list;
+  const ord=`<div class="seg sm lord" role="group">${["up","dn"].map(k=>`<button type="button" data-lord="${k}" aria-pressed="${state.lorder===k}">${tr(k==="up"?"lordUp":"lordDn")}</button>`).join("")}</div>`;
+  $("list").innerHTML=ord+rows.map((s,i)=>{
     const v=val(s.t);const pct=Math.abs(v||0)/mx*50;
     const bar=v==null?"":v>=0?`left:50%;width:${pct}%;background:${C.up};border-radius:0 3px 3px 0`:`right:50%;width:${pct}%;background:${C.down};border-radius:3px 0 0 3px`;
     return `<button type="button" class="row" data-t="${s.t}"><span class="rk num">${i+1}</span><span class="tk">${s.t}</span><span class="nm"><div>${esc(s.name)}</div><small>${secJa(s.sec)} · ${fmtCap(s.cap)}</small></span><span class="dbar bc"><i style="${bar}"></i></span><span class="v num ${cls(v)}">${fmt(v)}</span></button>`}).join("");
@@ -806,7 +810,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v61";
+const APP_VER="ndx-heatmap-v62";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
@@ -846,6 +850,7 @@ document.addEventListener("click",e=>{
   const v=e.target.closest("[data-v]");if(v){if(v.dataset.v!==state.view)state.zoom=null;state.view=v.dataset.v;store.set("view",state.view);renderAll();return}  // a picked sector stays with its tab
   const rr=e.target.closest("[data-rr]");if(rr){state.rrange=rr.dataset.rr;store.set("rrange",state.rrange);state.rmonth=null;renderControls();renderRanks();return}
   const rk=e.target.closest("[data-rk]");if(rk){state.rsel=state.rsel===rk.dataset.rk?null:rk.dataset.rk;renderRanks();return}
+  const lo=e.target.closest("[data-lord]");if(lo){state.lorder=lo.dataset.lord;store.set("lorder",state.lorder);renderList();return}
   const ws=e.target.closest("[data-w]");if(ws){state.wscope=ws.dataset.w;store.set("wscope",state.wscope);renderControls();renderWeights();return}
   if(e.target.closest("[data-secall]")){if(state.zoom){state.zoom=null;renderSectors();renderMapOrList()}return}
   if(e.target.closest("[data-secpick]"))return;
