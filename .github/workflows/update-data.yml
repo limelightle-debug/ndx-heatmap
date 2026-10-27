@@ -1,9 +1,9 @@
 name: Update NDX data
 
-# One run stays up through the US session and updates every 5 minutes, so the data
-# does not depend on GitHub's scheduler firing every few minutes (it often skips).
-# The schedules below only start that run (several times, in case one is skipped);
-# a start while it is running waits in the queue and does a single update afterwards.
+# One run is always up: it updates every 5 minutes while the US market is open, waits while it
+# is closed, and before the 6-hour limit starts the next run itself (workflow_dispatch, which
+# GitHub does not skip). The schedules below are only a backup that restarts the chain if it
+# ever breaks; a start while a run is going waits in the queue and takes over after it.
 on:
   schedule:
     - cron: "25 13 * * 1-5"   # 9:25 ET in summer time
@@ -39,26 +39,30 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # open: 9:25-16:15 ET on weekdays; final: just after the close and in the evening,
+          # for the closing figures; closed: everything else
           session() {
             python -c 'from datetime import datetime; from zoneinfo import ZoneInfo
           n = datetime.now(ZoneInfo("America/New_York")); m = n.hour * 60 + n.minute
-          print("closed" if n.weekday() >= 5 else "pre" if m < 9 * 60 + 25 else "open" if m < 16 * 60 + 15 else "closed")'
+          wk = n.weekday() < 5
+          print("open" if wk and 565 <= m < 975 else "final" if wk and (975 <= m < 990 or 1120 <= m < 1135) else "closed")'
           }
-          start=$(date +%s)
-          while true; do
-            s=$(session)
-            if [ "$s" = pre ] && [ $(( $(date +%s) - start )) -lt 4500 ]; then sleep 60; continue; fi
-            python scripts/update_ndx.py || echo "update failed; trying again next time"
+          update() {
+            timeout 600 python scripts/update_ndx.py || echo "update failed; trying again next time"
             git add data/
             if ! git diff --cached --quiet; then
               git commit -q -m "data: update NDX heatmap"
-              git pull -q --rebase origin main && git push -q || echo "push failed; trying again next time"
+              timeout 120 git pull -q --rebase origin main || { git rebase --abort 2>/dev/null; timeout 120 git pull -q --no-rebase -X ours origin main; }
+              timeout 120 git push -q || echo "push failed; trying again next time"
             fi
-            [ "$s" = open ] || break
-            if [ $(( $(date +%s) - start )) -gt 20400 ]; then
-              # close to the 6-hour limit: hand over to a fresh run
-              gh workflow run update-data.yml --ref main -R "$GITHUB_REPOSITORY" || true
-              break
-            fi
-            sleep 300
+          }
+          start=$(date +%s)
+          update
+          while [ $(( $(date +%s) - start )) -lt 20400 ]; do
+            case "$(session)" in
+              open|final) sleep 300; s=$(session); [ "$s" = closed ] || update ;;
+              *) sleep 60 ;;
+            esac
           done
+          # close to the 6-hour limit: hand over to a fresh run
+          gh workflow run update-data.yml --ref main -R "$GITHUB_REPOSITORY" || echo "handover failed; the schedules will restart"

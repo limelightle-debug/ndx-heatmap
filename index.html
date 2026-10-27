@@ -137,6 +137,10 @@ body[data-view="list"] .maphead,body[data-view="weight"] .maphead{display:none} 
 .sec .sh{position:absolute;left:0;right:0;top:0;height:20px;display:flex;align-items:center;gap:6px;padding:0 4px;font-size:11.5px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden}
 .sec .sh b{font-family:var(--f-tick);font-size:13px;font-weight:600;flex:none}
 .sec .sh span{min-width:2.3em;overflow:hidden;text-overflow:ellipsis}
+.ind{position:absolute;pointer-events:none;background:rgba(255,255,255,.07)}
+.ind .ih{position:absolute;left:0;right:0;top:0;height:14px;display:flex;align-items:center;gap:4px;padding:0 3px;font-size:10px;font-weight:600;line-height:1;color:var(--muted);white-space:nowrap;overflow:hidden}
+.ind .ih span{overflow:hidden;text-overflow:ellipsis}
+.ind .ih b{font-family:var(--f-tick);font-size:10.5px;font-weight:600;flex:none}
 .tile{position:absolute;appearance:none;border:0;padding:0;margin:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;font-family:var(--f-tick);line-height:1;transition:filter .12s}
 .tile:hover{filter:brightness(1.12)}
 .tile.sel{outline:2px solid var(--ink);outline-offset:-2px;z-index:2}
@@ -412,6 +416,8 @@ const PLABEL=new Proxy({},{get:(o,k)=>PERIODS.some(p=>p[0]===k)?tr(k):undefined}
 const CLAMP={d1:3,w1:8,w4:12,w13:20,w26:30,ytd:50,w52:60};
 const SEC_JA={"Technology":"テクノロジー","Consumer Defensive":"生活必需品","Consumer Cyclical":"一般消費財","Communication Services":"通信サービス","Healthcare":"ヘルスケア","Industrials":"資本財","Basic Materials":"素材","Financial":"金融","Energy":"エネルギー","Utilities":"公益","Real Estate":"不動産"};
 const secJa=s=>LANG==="ja"?SEC_JA[s]||s:s;
+const IND_JA={"Semiconductors":"半導体","Semiconductor Equipment & Materials":"半導体装置","Software - Infrastructure":"ソフトウェア基盤","Software - Application":"アプリソフト","Consumer Electronics":"家電・端末","Communication Equipment":"通信機器","Computer Hardware":"PC・記憶装置","Electronic Components":"電子部品","Information Technology Services":"ITサービス","Scientific & Technical Instruments":"計測機器","Internet Content & Information":"インターネット","Entertainment":"エンタメ","Telecom Services":"通信","Advertising Agencies":"広告","Electronic Gaming & Multimedia":"ゲーム","Internet Retail":"ネット小売","Auto Manufacturers":"自動車","Travel Services":"旅行","Restaurants":"外食","Lodging":"ホテル","Apparel Retail":"衣料小売","Auto Parts":"自動車部品","Specialty Retail":"専門小売","Home Improvement Retail":"住宅関連小売","Aerospace & Defense":"航空宇宙・防衛","Specialty Business Services":"ビジネスサービス","Railroads":"鉄道","Conglomerates":"複合企業","Industrial Distribution":"産業流通","Farm & Heavy Construction Machinery":"重機","Trucking":"陸運","Engineering & Construction":"建設","Staffing & Employment Services":"人材","Integrated Freight & Logistics":"物流","Discount Stores":"ディスカウント","Beverages - Non-Alcoholic":"飲料","Confectioners":"菓子","Packaged Foods":"加工食品","Drug Manufacturers - General":"製薬","Biotechnology":"バイオ","Medical Instruments & Supplies":"医療機器","Medical Devices":"医療機器","Diagnostics & Research":"診断・研究","Healthcare Plans":"医療保険","Specialty Chemicals":"化学","Utilities - Regulated Electric":"電力","Utilities - Independent Power Producers":"独立系発電","Oil & Gas E&P":"石油・ガス開発","Oil & Gas Equipment & Services":"石油サービス","Credit Services":"決済・与信","Capital Markets":"証券","Insurance Brokers":"保険仲介","Financial Data & Stock Exchanges":"金融データ・取引所","Asset Management":"資産運用"};
+const indJa=s=>LANG==="ja"?IND_JA[s]||SEC_JA[s]||s:s;
 
 let DATA=null, STOCKS=[], BY={}, CAPTOTAL=0, SECTORS=[], SWC={};
 const store={get(k,d){try{const v=localStorage.getItem("ndxhm."+k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem("ndxhm."+k,v)}catch(e){}}};
@@ -643,8 +649,11 @@ function renderMap(){
   }
   // Headings and gaps take space out of each box, more so in small ones. Re-run the layout a few
   // times, enlarging each box just enough that its tiles' area matches its index weight.
+  // Industries (finviz's grouping: 半導体, 半導体装置・材料, ...) get their own box, with a heading
+  // when it has room for one. Inside "その他" the second level is the sector instead.
+  const indHead=d=>d.depth===2&&d.children&&d.x1-d.x0>=46&&d.y1-d.y0>=42;
   const tm=d3.treemap().size([W,H]).tile(d3.treemapSquarify.ratio(1.15))
-    .paddingOuter(d=>d.depth===1?2:0).paddingTop(d=>d.depth===1?20:0).paddingInner(d=>d.depth===0?3:1).round(true);
+    .paddingOuter(d=>d.depth===1?2:0).paddingTop(d=>d.depth===1?20:indHead(d)?14:0).paddingInner(d=>d.depth===0?3:d.depth===1?2:1).round(true);
   // (A box can change shape between runs, so the step is damped and the closest run is kept.)
   const k={};let root,best=Infinity;
   for(let it=0;it<10;it++){
@@ -663,6 +672,11 @@ function renderMap(){
     const r=wret(STOCKS.filter(x=>names.includes(x.sec)));
     html+=`<div class="sec" style="left:${s.x0}px;top:${s.y0}px;width:${s.x1-s.x0}px;height:${s.y1-s.y0}px"><div class="sh"><span>${other?tr("other"):secJa(s.data.name)}</span><b class="${cls(r)}">${fmt(r,2)}</b></div></div>`;
   });
+  root.descendants().filter(n=>n.depth===2&&n.children).forEach(n=>{
+    const w=n.x1-n.x0, h=n.y1-n.y0, head=n.children[0].y0-n.y0>=14&&w>=46&&h>=42;
+    const tk=n.leaves().map(l=>l.data.t), r=wret(STOCKS.filter(x=>tk.includes(x.t)));
+    html+=`<div class="ind" style="left:${n.x0}px;top:${n.y0}px;width:${w}px;height:${h}px">${head?`<div class="ih"><span>${esc(indJa(n.data.name))}</span><b class="${cls(r)}">${fmt(r,2)}</b></div>`:""}</div>`;
+  });
   root.leaves().forEach(l=>{
     const t=l.data.t, w=l.x1-l.x0, h=l.y1-l.y0; if(!t||w<1||h<1)return;
     const v=val(t), bg=color(v), ink=inkOn(bg);
@@ -676,7 +690,7 @@ function renderMap(){
   });
   el.innerHTML=html;
   // the sector name comes first; its % stays only when both fit across the box
-  el.querySelectorAll(".sec .sh").forEach(h=>{const n=h.querySelector("span"),b=h.querySelector("b");if(b&&n.scrollWidth+6+b.offsetWidth>h.clientWidth-8)b.remove()});
+  el.querySelectorAll(".sec .sh,.ind .ih").forEach(h=>{const n=h.querySelector("span"),b=h.querySelector("b");if(b&&n.scrollWidth+6+b.offsetWidth>h.clientWidth-8)b.remove()});
 }
 function renderList(){
   const list=STOCKS.filter(s=>!state.zoom||s.sec===state.zoom).sort((a,b)=>(val(b.t)??-1e9)-(val(a.t)??-1e9));
@@ -814,7 +828,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v67";
+const APP_VER="ndx-heatmap-v68";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
