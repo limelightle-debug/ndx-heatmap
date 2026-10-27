@@ -370,6 +370,9 @@ body[data-view="list"] .maphead,body[data-view="weight"] .maphead{display:none} 
       <div class="readout" id="iread"></div>
       <div class="ichart" id="ichart"></div>
     </section>
+    <!-- related books: shown on the tabs whose content a book draws on -->
+    <section class="panel books" id="bk-env" data-books="vix:14" hidden></section>
+    <section class="panel books" id="bk-ret" data-books="anomaly:17:18" hidden></section>
     <div class="foot lab"><span class="labname"><img src="icons/avatar.jpg" alt="" width="36" height="36"><span data-i18n="lab">恐怖指数研究所</span></span><a href="https://limelightle-debug.github.io/tqqq/" data-i18n="openTqqq">TQQQ を開く</a></div>
   </div>
   <div class="empty" id="empty" data-i18n="loadingData">データを読み込んでいます…</div>
@@ -379,6 +382,7 @@ body[data-view="list"] .maphead,body[data-view="weight"] .maphead{display:none} 
 <aside id="detail" hidden aria-live="polite"></aside>
 
 <script src="d3.min.js"></script>
+<script src="books.js"></script>
 <script>
 /* ---------- language (日本語 / English) ---------- */
 let LANG=(()=>{try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -824,7 +828,7 @@ function renderDetail(){
 }
 function renderMapOrList(){
   const v=state.view;
-  $("map").hidden=v!=="map";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="weight"||!!state.zoom;
+  $("map").hidden=v!=="map";$("bk-env").hidden=!(v==="map"||v==="weight");$("bk-ret").hidden=v!=="list";$("list").hidden=v!=="list";$("weights").hidden=v!=="weight";$("ranks").hidden=v!=="weight"||!!state.zoom;
   ["lgroup","conp"].forEach(id=>$(id).hidden=v!=="list");  // the returns view's panels
   document.body.dataset.view=v;  // the weights view shows the weights alone (no period, price block or hint)
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
@@ -846,7 +850,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v70";
+const APP_VER="ndx-heatmap-v71";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
