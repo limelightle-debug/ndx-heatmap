@@ -625,17 +625,18 @@ function renderSectors(){
   document.querySelector("[data-secall]").setAttribute("aria-pressed",!state.zoom);document.querySelector("[data-secpick]").setAttribute("aria-pressed",!!state.zoom);
   const secs=SECTORS.map(sec=>{const list=STOCKS.filter(s=>s.sec===sec);return{sec,w:list.reduce((a,s)=>a+s.w,0)/100,r:wret(list)}}).sort((a,b)=>(b.r??-1e9)-(a.r??-1e9));
   // the industries of the picked sector share the bar scale, so theirs fit too
-  const zl=STOCKS.filter(x=>x.sec===state.zoom), zr=[...new Set(zl.map(x=>x.ind))].map(i=>Math.abs(wret(zl.filter(x=>x.ind===i))||0));
+  const zr=[...new Set(STOCKS.map(x=>x.sec+"|"+x.ind))].map(k=>STOCKS.filter(x=>x.sec+"|"+x.ind===k)).filter(l=>l[0].sec===state.zoom||l.reduce((a,x)=>a+x.w,0)>=2).map(l=>Math.abs(wret(l)||0));
   const mx=Math.max(...secs.map(s=>Math.abs(s.r||0)),...zr,1e-9);
   $("sectors").innerHTML=secs.map(s=>{
     const pct=Math.abs(s.r||0)/mx*50;
     const bar=s.r>=0?`left:50%;width:${pct}%;background:${C.up};border-radius:0 3px 3px 0`:`right:50%;width:${pct}%;background:${C.down};border-radius:3px 0 0 3px`;
     let h=`<button type="button" class="secrow" data-sec="${esc(s.sec)}" aria-pressed="${state.zoom===s.sec&&!state.ind}"><span class="nm">${secJa(s.sec)}</span><span class="wt num">${(s.w*100).toFixed(1)}%</span><span class="dbar"><i style="${bar}"></i></span><span class="v num ${cls(s.r)}">${fmt(s.r,2)}</span></button>`;
-    // a picked sector opens into its industries (半導体, 半導体装置, ...); tap one to narrow to it
-    if(state.zoom===s.sec){
+    // industries (半導体, 半導体装置, ...) sit under their sector: the ones of 2% or more of the
+    // index always, all of them once the sector is picked; tap one to narrow to it
+    {
       const g={};STOCKS.filter(x=>x.sec===s.sec).forEach(x=>(g[x.ind]=g[x.ind]||[]).push(x));
-      const inds=Object.entries(g).map(([ind,l])=>({ind,w:l.reduce((a,x)=>a+x.w,0)/100,r:wret(l)})).sort((a,b)=>(b.r??-1e9)-(a.r??-1e9));
-      if(inds.length>1)h+=inds.map(i=>{const p=Math.abs(i.r||0)/mx*50;
+      const inds=Object.entries(g).map(([ind,l])=>({ind,w:l.reduce((a,x)=>a+x.w,0)/100,r:wret(l)})).filter(i=>state.zoom===s.sec||i.w>=.02).sort((a,b)=>(b.r??-1e9)-(a.r??-1e9));
+      if(Object.keys(g).length>1)h+=inds.map(i=>{const p=Math.abs(i.r||0)/mx*50;
         const b=i.r>=0?`left:50%;width:${p}%;background:${C.up};border-radius:0 3px 3px 0`:`right:50%;width:${p}%;background:${C.down};border-radius:3px 0 0 3px`;
         return `<button type="button" class="secrow indrow" data-ind="${esc(i.ind)}" aria-pressed="${state.ind===i.ind}"><span class="nm">${esc(indJa(i.ind))}</span><span class="wt num">${(i.w*100).toFixed(1)}%</span><span class="dbar"><i style="${b}"></i></span><span class="v num ${cls(i.r)}">${fmt(i.r,2)}</span></button>`}).join("");
     }
@@ -845,7 +846,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v69";
+const APP_VER="ndx-heatmap-v70";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
@@ -889,7 +890,7 @@ document.addEventListener("click",e=>{
   const ws=e.target.closest("[data-w]");if(ws){state.wscope=ws.dataset.w;store.set("wscope",state.wscope);renderControls();renderWeights();return}
   if(e.target.closest("[data-secall]")){if(state.zoom){state.zoom=null;state.ind=null;renderSectors();renderMapOrList()}return}
   if(e.target.closest("[data-secpick]"))return;
-  const ie=e.target.closest("[data-ind]");if(ie){state.ind=state.ind===ie.dataset.ind?null:ie.dataset.ind;renderSectors();renderMapOrList();return}
+  const ie=e.target.closest("[data-ind]");if(ie){const sec=STOCKS.find(x=>x.ind===ie.dataset.ind).sec;if(state.zoom!==sec){state.zoom=sec;state.ind=ie.dataset.ind}else state.ind=state.ind===ie.dataset.ind?null:ie.dataset.ind;renderSectors();renderMapOrList();return}
   const se=e.target.closest("[data-sec]");if(se){state.zoom=state.zoom===se.dataset.sec&&!state.ind?null:se.dataset.sec;state.ind=null;renderSectors();renderMapOrList();if(state.view==="map")$("map").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});return}
   const itf=e.target.closest("[data-itf]");if(itf){state.itf=itf.dataset.itf;store.set("itf",state.itf);state.ici=null;renderIdx();return}
   const isc=e.target.closest("[data-isc]");if(isc){state.isc=isc.dataset.isc;store.set("isc",state.isc);renderIdx();return}
