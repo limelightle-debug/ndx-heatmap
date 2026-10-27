@@ -116,6 +116,9 @@ button:focus-visible,.crow:focus-visible{outline:2px solid var(--accent);outline
 .dbar::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line)}
 .dbar i{position:absolute;top:1px;bottom:1px}
 .secrow .v{text-align:right;font-size:15px;font-weight:600}
+.secrow.indrow{padding:4px 6px}
+.secrow.indrow .nm{font-size:12px;padding-left:12px;color:var(--ink2)}
+.secrow.indrow .v{font-size:13px}
 
 .mapbox{margin-top:10px}  /* 10px between panels, as in every app */
 body[data-view="list"] .maphead,body[data-view="weight"] .maphead{display:none}  /* nothing to show there */
@@ -418,10 +421,12 @@ const SEC_JA={"Technology":"テクノロジー","Consumer Defensive":"生活必�
 const secJa=s=>LANG==="ja"?SEC_JA[s]||s:s;
 const IND_JA={"Semiconductors":"半導体","Semiconductor Equipment & Materials":"半導体装置","Software - Infrastructure":"ソフトウェア基盤","Software - Application":"アプリソフト","Consumer Electronics":"家電・端末","Communication Equipment":"通信機器","Computer Hardware":"PC・記憶装置","Electronic Components":"電子部品","Information Technology Services":"ITサービス","Scientific & Technical Instruments":"計測機器","Internet Content & Information":"インターネット","Entertainment":"エンタメ","Telecom Services":"通信","Advertising Agencies":"広告","Electronic Gaming & Multimedia":"ゲーム","Internet Retail":"ネット小売","Auto Manufacturers":"自動車","Travel Services":"旅行","Restaurants":"外食","Lodging":"ホテル","Apparel Retail":"衣料小売","Auto Parts":"自動車部品","Specialty Retail":"専門小売","Home Improvement Retail":"住宅関連小売","Aerospace & Defense":"航空宇宙・防衛","Specialty Business Services":"ビジネスサービス","Railroads":"鉄道","Conglomerates":"複合企業","Industrial Distribution":"産業流通","Farm & Heavy Construction Machinery":"重機","Trucking":"陸運","Engineering & Construction":"建設","Staffing & Employment Services":"人材","Integrated Freight & Logistics":"物流","Discount Stores":"ディスカウント","Beverages - Non-Alcoholic":"飲料","Confectioners":"菓子","Packaged Foods":"加工食品","Drug Manufacturers - General":"製薬","Biotechnology":"バイオ","Medical Instruments & Supplies":"医療機器","Medical Devices":"医療機器","Diagnostics & Research":"診断・研究","Healthcare Plans":"医療保険","Specialty Chemicals":"化学","Utilities - Regulated Electric":"電力","Utilities - Independent Power Producers":"独立系発電","Oil & Gas E&P":"石油・ガス開発","Oil & Gas Equipment & Services":"石油サービス","Credit Services":"決済・与信","Capital Markets":"証券","Insurance Brokers":"保険仲介","Financial Data & Stock Exchanges":"金融データ・取引所","Asset Management":"資産運用"};
 const indJa=s=>LANG==="ja"?IND_JA[s]||SEC_JA[s]||s:s;
+// the picked sector, narrowed further to one industry when one is picked under it
+const picked=s=>(!state.zoom||s.sec===state.zoom)&&(!state.ind||s.ind===state.ind);
 
 let DATA=null, STOCKS=[], BY={}, CAPTOTAL=0, SECTORS=[], SWC={};
 const store={get(k,d){try{const v=localStorage.getItem("ndxhm."+k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem("ndxhm."+k,v)}catch(e){}}};
-const state={period:store.get("period","d1"),view:store.get("view","map"),wscope:store.get("wscope","20"),lorder:store.get("lorder","up"),rrange:store.get("rrange","10"),rsel:null,rmonth:null,zoom:null,sel:null,
+const state={period:store.get("period","d1"),view:store.get("view","map"),wscope:store.get("wscope","20"),lorder:store.get("lorder","up"),rrange:store.get("rrange","10"),rsel:null,rmonth:null,zoom:null,ind:null,sel:null,
   itf:store.get("itf","d"),isc:store.get("isc","lin"),irange:{d:store.get("ir_d","6M"),w:store.get("ir_w","2Y"),m:store.get("ir_m","ALL")},ici:null};
 if(state.view==="rank")state.view="weight";  // the rank chart now lives in the weight view
 if(!["map","list","weight","chart"].includes(state.view))state.view="map";
@@ -451,6 +456,7 @@ function setData(d){
   SECTORS=Object.keys(caps).sort((a,b)=>caps[b]-caps[a]);
   if(state.sel&&!BY[state.sel])state.sel=null;
   if(state.zoom&&!SECTORS.includes(state.zoom))state.zoom=null;
+  if(state.ind&&!STOCKS.some(x=>x.sec===state.zoom&&x.ind===state.ind))state.ind=null;
 }
 
 /* market status */
@@ -618,11 +624,22 @@ function renderSectors(){
   // 全体 is picked until a sector is; then the filter label is
   document.querySelector("[data-secall]").setAttribute("aria-pressed",!state.zoom);document.querySelector("[data-secpick]").setAttribute("aria-pressed",!!state.zoom);
   const secs=SECTORS.map(sec=>{const list=STOCKS.filter(s=>s.sec===sec);return{sec,w:list.reduce((a,s)=>a+s.w,0)/100,r:wret(list)}}).sort((a,b)=>(b.r??-1e9)-(a.r??-1e9));
-  const mx=Math.max(...secs.map(s=>Math.abs(s.r||0)),1e-9);
+  // the industries of the picked sector share the bar scale, so theirs fit too
+  const zl=STOCKS.filter(x=>x.sec===state.zoom), zr=[...new Set(zl.map(x=>x.ind))].map(i=>Math.abs(wret(zl.filter(x=>x.ind===i))||0));
+  const mx=Math.max(...secs.map(s=>Math.abs(s.r||0)),...zr,1e-9);
   $("sectors").innerHTML=secs.map(s=>{
     const pct=Math.abs(s.r||0)/mx*50;
     const bar=s.r>=0?`left:50%;width:${pct}%;background:${C.up};border-radius:0 3px 3px 0`:`right:50%;width:${pct}%;background:${C.down};border-radius:3px 0 0 3px`;
-    return `<button type="button" class="secrow" data-sec="${esc(s.sec)}" aria-pressed="${state.zoom===s.sec}"><span class="nm">${secJa(s.sec)}</span><span class="wt num">${(s.w*100).toFixed(1)}%</span><span class="dbar"><i style="${bar}"></i></span><span class="v num ${cls(s.r)}">${fmt(s.r,2)}</span></button>`}).join("");
+    let h=`<button type="button" class="secrow" data-sec="${esc(s.sec)}" aria-pressed="${state.zoom===s.sec&&!state.ind}"><span class="nm">${secJa(s.sec)}</span><span class="wt num">${(s.w*100).toFixed(1)}%</span><span class="dbar"><i style="${bar}"></i></span><span class="v num ${cls(s.r)}">${fmt(s.r,2)}</span></button>`;
+    // a picked sector opens into its industries (半導体, 半導体装置, ...); tap one to narrow to it
+    if(state.zoom===s.sec){
+      const g={};STOCKS.filter(x=>x.sec===s.sec).forEach(x=>(g[x.ind]=g[x.ind]||[]).push(x));
+      const inds=Object.entries(g).map(([ind,l])=>({ind,w:l.reduce((a,x)=>a+x.w,0)/100,r:wret(l)})).sort((a,b)=>(b.r??-1e9)-(a.r??-1e9));
+      if(inds.length>1)h+=inds.map(i=>{const p=Math.abs(i.r||0)/mx*50;
+        const b=i.r>=0?`left:50%;width:${p}%;background:${C.up};border-radius:0 3px 3px 0`:`right:50%;width:${p}%;background:${C.down};border-radius:3px 0 0 3px`;
+        return `<button type="button" class="secrow indrow" data-ind="${esc(i.ind)}" aria-pressed="${state.ind===i.ind}"><span class="nm">${esc(indJa(i.ind))}</span><span class="wt num">${(i.w*100).toFixed(1)}%</span><span class="dbar"><i style="${b}"></i></span><span class="v num ${cls(i.r)}">${fmt(i.r,2)}</span></button>`}).join("");
+    }
+    return h}).join("");
 }
 function renderLegend(){
   const m=CLAMP[state.period];
@@ -636,7 +653,7 @@ function renderMap(){
   const H=state.zoom?(narrow?Math.round(W*1.15):Math.round(Math.min(W*.5,620))):(narrow?Math.round(W*1.55):Math.round(Math.min(W*.6,760)));
   el.style.height=H+"px";
   const secs=SECTORS.filter(sec=>!state.zoom||sec===state.zoom).map(sec=>{
-    const inds={};STOCKS.filter(s=>s.sec===sec).forEach(s=>{(inds[s.ind]=inds[s.ind]||[]).push({t:s.t,cap:s.w})});
+    const inds={};STOCKS.filter(s=>s.sec===sec&&picked(s)).forEach(s=>{(inds[s.ind]=inds[s.ind]||[]).push({t:s.t,cap:s.w})});
     return{name:sec,children:Object.entries(inds).map(([ind,ch])=>({name:ind,children:ch}))};
   });
   // Areas stay true to index weight. Sectors too small to hold their own heading
@@ -693,7 +710,7 @@ function renderMap(){
   el.querySelectorAll(".sec .sh,.ind .ih").forEach(h=>{const n=h.querySelector("span"),b=h.querySelector("b");if(b&&n.scrollWidth+6+b.offsetWidth>h.clientWidth-8)b.remove()});
 }
 function renderList(){
-  const list=STOCKS.filter(s=>!state.zoom||s.sec===state.zoom).sort((a,b)=>(val(b.t)??-1e9)-(val(a.t)??-1e9));
+  const list=STOCKS.filter(picked).sort((a,b)=>(val(b.t)??-1e9)-(val(a.t)??-1e9));
   const mx=Math.max(...list.map(s=>Math.abs(val(s.t)||0)),1e-9);
   // the top three and the bottom three at a glance
   const okv=list.filter(s=>val(s.t)!=null),t3=okv.slice(0,3),b3=okv.slice(3).slice(-3).reverse();  // a small sector: no name twice
@@ -708,7 +725,7 @@ function renderList(){
   $("list").innerHTML=ord+rows.map((s,i)=>{
     const v=val(s.t);const pct=Math.abs(v||0)/mx*50;
     const bar=v==null?"":v>=0?`left:50%;width:${pct}%;background:${C.up};border-radius:0 3px 3px 0`:`right:50%;width:${pct}%;background:${C.down};border-radius:3px 0 0 3px`;
-    return `<button type="button" class="row" data-t="${s.t}"><span class="rk num">${i+1}</span><span class="tk">${s.t}</span><span class="nm"><div>${esc(s.name)}</div><small>${secJa(s.sec)} · ${fmtCap(s.cap)}</small></span><span class="dbar bc"><i style="${bar}"></i></span><span class="v num ${cls(v)}">${fmt(v)}</span></button>`}).join("");
+    return `<button type="button" class="row" data-t="${s.t}"><span class="rk num">${i+1}</span><span class="tk">${s.t}</span><span class="nm"><div>${esc(s.name)}</div><small>${esc(indJa(s.ind))} · ${fmtCap(s.cap)}</small></span><span class="dbar bc"><i style="${bar}"></i></span><span class="v num ${cls(v)}">${fmt(v)}</span></button>`}).join("");
 }
 function renderWeights(){
   {const w=DATA&&DATA.weights,d=w&&w.asOf&&w.asOf.split("-");$("wasof").textContent=d?tr("wUpd",+d[1],+d[2]):tr("wApprox")}
@@ -717,14 +734,14 @@ function renderWeights(){
   const top10=all.slice(0,10).reduce((a,s)=>a+w(s),0), top20=all.slice(0,20).reduce((a,s)=>a+w(s),0);
   $("wstats").innerHTML=`<div>${tr("top10")}<b>${top10.toFixed(2)}%</b></div><div>${tr("top20s")}<b>${top20.toFixed(2)}%</b></div><div>${tr("rest",all.length-20)}<b>${(100-top20).toFixed(2)}%</b></div>`;
   let list=all.map((s,i)=>({s,rank:i+1}));
-  if(state.zoom)list=list.filter(x=>x.s.sec===state.zoom);
+  if(state.zoom)list=list.filter(x=>picked(x.s));
   else if(state.wscope==="20")list=list.slice(0,20);
   const mx=Math.max(...list.map(x=>w(x.s)),1e-9);
   // column heads: what each number is
   let html=`<div class="wrow whead"><span></span><span>${tr("whTicker")}</span><span class="wh2">${tr("whWeight")}</span></div>`;
   list.forEach((x,i)=>{
     if(!state.zoom&&state.wscope==="all"&&(x.rank===11||x.rank===21))html+=`<div class="wsep">${tr("rankBelow",x.rank)}</div>`;
-    html+=`<button type="button" class="wrow" data-t="${x.s.t}"><span class="rk num">${x.rank}</span><span class="tk">${x.s.t}<small>${esc(x.s.name)}</small></span><span class="wbar"><i style="width:${Math.max(1,w(x.s)/mx*100)}%"></i></span><span class="w num">${w(x.s).toFixed(2)}%</span></button>`;
+    html+=`<button type="button" class="wrow" data-t="${x.s.t}"><span class="rk num">${x.rank}</span><span class="tk">${x.s.t}<small>${esc(x.s.name)} · ${esc(indJa(x.s.ind))}</small></span><span class="wbar"><i style="width:${Math.max(1,w(x.s)/mx*100)}%"></i></span><span class="w num">${w(x.s).toFixed(2)}%</span></button>`;
   });
   $("wlist").innerHTML=html;
   $("wscope").hidden=!!state.zoom;
@@ -797,7 +814,7 @@ function renderDetail(){
   const s=BY[state.sel];
   const chips=PERIODS.map(([k,l])=>{const v=val(s.t,k);const bg=colorAt(v,k);return `<div class="pc${k===state.period?" cur":""}" style="background:${bg};color:${inkOn(bg)}"><div class="l">${tr(l)}</div><div class="n">${fmt(v,v!=null&&Math.abs(v)>=100?0:1)}</div></div>`}).join("");
   const cv=contrib(s.t), sw=startW()[s.t];
-  d.innerHTML=`<div class="dhead"><div><div class="dtk">${s.t}</div><div class="dname">${esc(s.name)}</div><div class="dmeta">${secJa(s.sec)} · ${esc(s.ind)}</div></div><button type="button" class="x" id="close">${tr("close")}</button></div>
+  d.innerHTML=`<div class="dhead"><div><div class="dtk">${s.t}</div><div class="dname">${esc(s.name)}</div><div class="dmeta">${secJa(s.sec)} · ${esc(indJa(s.ind))}</div></div><button type="button" class="x" id="close">${tr("close")}</button></div>
    <div class="dfacts"><span>${tr("mcap")}<b>${fmtCap(s.cap)}</b></span><span>${tr("idxWeight")}<b>${s.w.toFixed(2)}%</b></span><span>${tr("contribP",PLABEL[state.period])}<b>${cv==null?"—":(cv>0?"+":"−")+Math.abs(cv).toFixed(2)+"pt"}</b><small>${tr("startW")} ${sw==null?"—":sw.toFixed(2)+"%"} × ${fmt(val(s.t))}</small></span></div>
    <div class="pgrid">${chips}</div>
    <a class="dlink" href="https://finviz.com/quote.ashx?t=${encodeURIComponent(s.t)}" target="_blank" rel="noopener noreferrer">${tr("finviz",s.t)}</a>`;
@@ -810,7 +827,7 @@ function renderMapOrList(){
   ["lgroup","conp"].forEach(id=>$(id).hidden=v!=="list");  // the returns view's panels
   document.body.dataset.view=v;  // the weights view shows the weights alone (no period, price block or hint)
   document.querySelector(".legend").style.visibility=v==="map"?"visible":"hidden";
-  $("hint").textContent=state.zoom?tr("showing",secJa(state.zoom)):({map:tr("hintMap"),list:tr("hintList",PLABEL[state.period]),weight:tr("hintWeight",weightNote()),chart:""})[v];
+  $("hint").textContent=state.zoom?tr("showing",state.ind?indJa(state.ind):secJa(state.zoom)):({map:tr("hintMap"),list:tr("hintList",PLABEL[state.period]),weight:tr("hintWeight",weightNote()),chart:""})[v];
   renderIdx();
   if(v==="map")renderMap();else if(v==="list")renderList();else if(v==="weight"){renderWeights();if(!state.zoom)renderRanks()}
 }
@@ -828,7 +845,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v68";
+const APP_VER="ndx-heatmap-v69";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
@@ -865,14 +882,15 @@ async function load(manual){
 /* events */
 document.addEventListener("click",e=>{
   const p=e.target.closest("[data-p]");if(p){state.period=p.dataset.p;store.set("period",state.period);renderAll();return}
-  const v=e.target.closest("[data-v]");if(v){if(v.dataset.v!==state.view)state.zoom=null;state.view=v.dataset.v;store.set("view",state.view);renderAll();return}  // a picked sector stays with its tab
+  const v=e.target.closest("[data-v]");if(v){if(v.dataset.v!==state.view){state.zoom=null;state.ind=null}state.view=v.dataset.v;store.set("view",state.view);renderAll();return}  // a picked sector stays with its tab
   const rr=e.target.closest("[data-rr]");if(rr){state.rrange=rr.dataset.rr;store.set("rrange",state.rrange);state.rmonth=null;renderControls();renderRanks();return}
   const rk=e.target.closest("[data-rk]");if(rk){state.rsel=state.rsel===rk.dataset.rk?null:rk.dataset.rk;renderRanks();return}
   const lo=e.target.closest("[data-lord]");if(lo){state.lorder=lo.dataset.lord;store.set("lorder",state.lorder);renderList();return}
   const ws=e.target.closest("[data-w]");if(ws){state.wscope=ws.dataset.w;store.set("wscope",state.wscope);renderControls();renderWeights();return}
-  if(e.target.closest("[data-secall]")){if(state.zoom){state.zoom=null;renderSectors();renderMapOrList()}return}
+  if(e.target.closest("[data-secall]")){if(state.zoom){state.zoom=null;state.ind=null;renderSectors();renderMapOrList()}return}
   if(e.target.closest("[data-secpick]"))return;
-  const se=e.target.closest("[data-sec]");if(se){state.zoom=state.zoom===se.dataset.sec?null:se.dataset.sec;renderSectors();renderMapOrList();if(state.view==="map")$("map").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});return}
+  const ie=e.target.closest("[data-ind]");if(ie){state.ind=state.ind===ie.dataset.ind?null:ie.dataset.ind;renderSectors();renderMapOrList();return}
+  const se=e.target.closest("[data-sec]");if(se){state.zoom=state.zoom===se.dataset.sec&&!state.ind?null:se.dataset.sec;state.ind=null;renderSectors();renderMapOrList();if(state.view==="map")$("map").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});return}
   const itf=e.target.closest("[data-itf]");if(itf){state.itf=itf.dataset.itf;store.set("itf",state.itf);state.ici=null;renderIdx();return}
   const isc=e.target.closest("[data-isc]");if(isc){state.isc=isc.dataset.isc;store.set("isc",state.isc);renderIdx();return}
   const ir=e.target.closest("[data-ir]");if(ir){state.irange[state.itf]=ir.dataset.ir;store.set("ir_"+state.itf,ir.dataset.ir);state.ici=null;renderIdx();return}
@@ -887,7 +905,7 @@ $("map").addEventListener("pointermove",e=>{
   if(e.pointerType!=="mouse"){tip.hidden=true;return}
   const t=e.target.closest(".tile");if(!t){tip.hidden=true;return}
   const s=BY[t.dataset.t];if(!s)return;const v=val(s.t);
-  tip.innerHTML=`<b>${s.t}</b> <span class="num ${cls(v)}" style="font-size:16px;font-weight:700">${fmt(v)}</span><div>${esc(s.name)}</div><div style="color:var(--muted)">${esc(s.ind)} · ${fmtCap(s.cap)}</div>`;
+  tip.innerHTML=`<b>${s.t}</b> <span class="num ${cls(v)}" style="font-size:16px;font-weight:700">${fmt(v)}</span><div>${esc(s.name)}</div><div style="color:var(--muted)">${esc(indJa(s.ind))} · ${fmtCap(s.cap)}</div>`;
   tip.hidden=false;
   const r=tip.getBoundingClientRect();let x=e.clientX+14,y=e.clientY+14;
   if(x+r.width>innerWidth-8)x=e.clientX-r.width-14;if(y+r.height>innerHeight-8)y=e.clientY-r.height-14;
