@@ -52,6 +52,8 @@ h1 small{font-family:var(--f-body);font-weight:500;font-size:13px;color:var(--mu
 .pill.warn{color:var(--downc)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* every row of tabs spans the width with equal tabs, as the first row */
+#views,#periods{flex:1 1 100%;width:100%}#views button,#periods button{flex:1 1 0;min-width:0;padding-left:2px;padding-right:2px}
 .seg{display:flex;background:var(--chip);border-radius:8px;padding:3px;gap:2px;overflow-x:auto;max-width:100%;scrollbar-width:none}
 .seg::-webkit-scrollbar{display:none}
 .seg button{appearance:none;border:0;background:transparent;color:var(--ink2);font:500 13px/1 var(--f-body);padding:8px 11px;border-radius:6px;cursor:pointer;white-space:nowrap}
@@ -852,7 +854,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v73";
+const APP_VER="ndx-heatmap-v74";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
