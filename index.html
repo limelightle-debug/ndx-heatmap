@@ -21,7 +21,7 @@
 /* Layout: sticky control bar (tabs, period) → index → treemap / ranked list (with its breadth panel) / weights / candle chart */
 :root{
   /* always dark, like the TQQQ app */
-  --bg:#050506; --panel:#0e0e11; --ink:#f4f4f6; --ink2:#cfcfd6; --muted:#8c8c96; --line:#25252b; --accent:#ff2d55;
+  --bg:#050506; --panel:#0e0e11; --ink:#f4f4f6; --ink2:#cfcfd6; --muted:#8c8c96; --line:#25252b; --accent:#2ee6ff;
   --up:#2db069; --down:#ea4a51; --upAlt:#4a8df0; --mid:#363b44; --na:#2a2e35; --chip:#17171b; --shade:rgba(0,0,0,.35);
   --f-tick:"Archivo","Helvetica Neue",Arial,sans-serif;
   --f-body:"LINE Seed JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
@@ -854,7 +854,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v75";
+const APP_VER="ndx-heatmap-v76";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
