@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Nasdaq 100">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f1114">
+<meta name="theme-color" content="#050506">
 <meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,8 +21,8 @@
 /* Layout: sticky control bar (tabs, period) → index → treemap / ranked list (with its breadth panel) / weights / candle chart */
 :root{
   /* always dark, like the TQQQ app */
-  --bg:#0f1114; --panel:#171a1f; --ink:#eef0f2; --ink2:#b9bfc8; --muted:#848c97; --line:#2a2f37; --accent:#5ea4ff;
-  --up:#2db069; --down:#ea4a51; --upAlt:#4a8df0; --mid:#363b44; --na:#2a2e35; --chip:#22262d; --shade:rgba(0,0,0,.35);
+  --bg:#050506; --panel:#0e0e11; --ink:#f4f4f6; --ink2:#cfcfd6; --muted:#8c8c96; --line:#25252b; --accent:#ff2d55;
+  --up:#2db069; --down:#ea4a51; --upAlt:#4a8df0; --mid:#363b44; --na:#2a2e35; --chip:#17171b; --shade:rgba(0,0,0,.35);
   --f-tick:"Archivo","Helvetica Neue",Arial,sans-serif;
   --f-body:"LINE Seed JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
   color-scheme:dark;
@@ -277,7 +277,7 @@ body[data-view="list"] .maphead,body[data-view="weight"] .maphead{display:none} 
 @media (prefers-reduced-motion:reduce){.tile{transition:none}}
 
 .h2t{font-style:normal}
-.langseg{display:flex;background:var(--chip,#1a1a36);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px;flex:none}.langseg button{appearance:none;border:0;background:transparent;color:var(--muted);font:700 12px/1 inherit;letter-spacing:.04em;padding:7px 9px;border-radius:6px;cursor:pointer}.langseg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.4)}
+.langseg{display:flex;background:var(--chip,#17171b);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px;flex:none}.langseg button{appearance:none;border:0;background:transparent;color:var(--muted);font:700 12px/1 inherit;letter-spacing:.04em;padding:7px 9px;border-radius:6px;cursor:pointer}.langseg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.4)}
 </style>
 </head>
 <body>
@@ -854,7 +854,7 @@ async function loadRanks(){
 }
 // When a newer version of the app is published, reload to pick it up (the version is the
 // service worker's cache name; bump both together).
-const APP_VER="ndx-heatmap-v74";
+const APP_VER="ndx-heatmap-v75";
 async function newerApp(){
   try{const t=await(await fetch("sw.js?ts="+Date.now(),{cache:"no-store"})).text();const m=t.match(/CACHE = "([^"]+)"/);
     // at most one reload per new version, in case the page itself is still served from a cache
